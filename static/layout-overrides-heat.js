@@ -1,4 +1,4 @@
-// BEAM LAB 版面调试保存的配置（由「版面调试」窗口自动生成，2026-10-07 13:36:46）
+// BEAM LAB 版面调试保存的配置（由「版面调试」窗口自动生成，2026-10-11 09:24:50）
 // 放在 static 文件夹里，teacher.html 和 student.html 会自动读取。
 // "wide" "medium" "narrow" 是教师版（按宽度分档），"phone" 是学生页的手机版面。
 // 想恢复默认版面：把 "regimes" 后面的内容改成 {}，或在版面调试里重置后再保存。
@@ -9,47 +9,47 @@ window.BEAM_LAYOUT_OVERRIDES = {
   "canvas": {
     "pages": {
       "A1-0": [
-        1758.2,
-        742.2
+        1834.8,
+        759.5
       ],
       "A1-1": [
-        1758.2,
-        742.2
+        1834.8,
+        759.5
       ],
       "A1-2": [
-        1758.2,
-        742.2
+        1834.8,
+        759.5
       ],
       "A1-3": [
-        1374.2,
-        742.2
+        1450.8,
+        759.5
       ],
       "A2-0": [
-        1383,
-        742.2
+        1460,
+        759.5
       ],
       "A2-1": [
-        1383,
-        742.2
+        1460,
+        759.5
       ],
       "A2-2": [
-        1383,
-        742.2
+        1460,
+        759.5
       ],
       "A2-3": [
-        1383,
-        742.2
+        1460,
+        759.5
       ],
       "A2-4": [
-        1383,
-        742.2
+        1460,
+        759.5
       ],
       "A2-5": [
-        1383,
-        742.2
+        1460,
+        759.5
       ]
     },
-    "width": 1767
+    "width": 1844
   },
   "regimes": {
     "phone": {
@@ -838,13 +838,24 @@ window.BEAM_LAYOUT_OVERRIDES = {
         }
       },
       "A2-1": {
+        "slot:basicMomentBg": {
+          "kind": "abs",
+          "label": "10 下方弯矩图",
+          "props": {
+            "kh": 42.841,
+            "kw": 78.1551,
+            "lvw": 5.2636
+          },
+          "sel": "#app .force-free-canvas > [data-element-slot=\"basicMomentBg\"]"
+        },
         "slot:basicStructure": {
           "kind": "abs",
           "label": "07 基本体系图",
           "props": {
-            "kh": 40.1302,
-            "kw": 79.0672,
-            "lvw": 47.6687
+            "kh": 42.841,
+            "kw": 78.1551,
+            "lvw": 47.6687,
+            "tvw": 24.4747
           },
           "sel": "#app .force-free-canvas > [data-element-slot=\"basicStructure\"]"
         }
@@ -862,13 +873,24 @@ window.BEAM_LAYOUT_OVERRIDES = {
           },
           "sel": "#app .force-free-canvas > .deformation-formula-label"
         },
+        "slot:basicMomentBg": {
+          "kind": "abs",
+          "label": "10 下方弯矩图",
+          "props": {
+            "kh": 42.841,
+            "kw": 78.1551,
+            "lvw": 5.2636
+          },
+          "sel": "#app .force-free-canvas > [data-element-slot=\"basicMomentBg\"]"
+        },
         "slot:basicStructure": {
           "kind": "abs",
           "label": "07 基本体系图",
           "props": {
-            "kh": 40.1302,
-            "kw": 79.0672,
-            "lvw": 47.6681
+            "kh": 42.841,
+            "kw": 78.1551,
+            "lvw": 47.6681,
+            "tvw": 24.4745
           },
           "sel": "#app .force-free-canvas > [data-element-slot=\"basicStructure\"]"
         }
@@ -886,16 +908,48 @@ window.BEAM_LAYOUT_OVERRIDES = {
           },
           "sel": "#app .force-free-canvas > .deformation-formula-label"
         },
+        "slot:basicMomentBg": {
+          "kind": "abs",
+          "label": "10 下方弯矩图",
+          "props": {
+            "kh": 42.841,
+            "kw": 78.1551,
+            "lvw": 5.2636
+          },
+          "sel": "#app .force-free-canvas > [data-element-slot=\"basicMomentBg\"]"
+        },
         "slot:basicStructure": {
           "kind": "abs",
           "label": "07 基本体系图",
           "props": {
-            "kh": 40.1302,
-            "kw": 79.0672,
-            "lvw": 47.6682,
-            "tvw": 24.7382
+            "kh": 42.841,
+            "kw": 78.1551,
+            "lvw": 47.991,
+            "tvw": 22.4936
           },
           "sel": "#app .force-free-canvas > [data-element-slot=\"basicStructure\"]"
+        }
+      },
+      "A2-3-compareHeat": {
+        "compareBottomStructureHeat": {
+          "kind": "abs",
+          "label": "对照·下排结构图（温度）",
+          "props": {
+            "kh": 41.0521,
+            "kw": 79.0672,
+            "tvw": 23.181
+          },
+          "sel": "#app .force-free-canvas > [data-compare-slot-heat=\"bottomStructure\"]"
+        },
+        "compareTopStructureHeat": {
+          "kind": "abs",
+          "label": "对照·上排结构图（荷载）",
+          "props": {
+            "kh": 42.841,
+            "kw": 78.1551,
+            "tvw": 4.3269
+          },
+          "sel": "#app .force-free-canvas > [data-compare-slot-heat=\"topStructure\"]"
         }
       },
       "A2-4": {
@@ -940,10 +994,10 @@ window.BEAM_LAYOUT_OVERRIDES = {
           "kind": "abs",
           "label": "07 基本体系图",
           "props": {
-            "kh": 40.1302,
+            "kh": 41.0521,
             "kw": 79.0672,
-            "lvw": 47.6681,
-            "tvw": 23.7078,
+            "lvw": 48.1028,
+            "tvw": 23.8324,
             "wvw": 24.6204
           },
           "sel": "#app .force-free-canvas > [data-element-slot=\"basicStructure\"]"
@@ -982,10 +1036,10 @@ window.BEAM_LAYOUT_OVERRIDES = {
           "kind": "abs",
           "label": "07 基本体系图",
           "props": {
-            "kh": 40.1302,
-            "kw": 79.0672,
-            "lvw": 47.6683,
-            "tvw": 23.7081,
+            "kh": 42.841,
+            "kw": 78.1551,
+            "lvw": 48.1043,
+            "tvw": 23.8514,
             "wvw": 24.6204
           },
           "sel": "#app .force-free-canvas > [data-element-slot=\"basicStructure\"]"
@@ -1001,6 +1055,54 @@ window.BEAM_LAYOUT_OVERRIDES = {
             "tvw": -0.7051
           },
           "sel": "#app .deformation-zero-label"
+        }
+      },
+      "A2-5-compareHeat": {
+        "compareBottomStructureHeat": {
+          "kind": "abs",
+          "label": "对照·下排结构图（温度）",
+          "props": {
+            "kh": 41.0521,
+            "kw": 79.0672,
+            "lvw": 31.1828,
+            "tvw": 25.2965,
+            "wvw": 26.7119
+          },
+          "sel": "#app .force-free-canvas > [data-compare-slot-heat=\"bottomStructure\"]"
+        },
+        "compareNoteBottomHeat": {
+          "kind": "abstext",
+          "label": "对照·下排说明 / 力法方程",
+          "props": {
+            "kh": 42.841,
+            "kw": 78.1551,
+            "lvw": 61.6304,
+            "tvw": 31.1523
+          },
+          "sel": "#app .force-free-canvas > [data-compare-note-heat=\"bottom\"]"
+        },
+        "compareNoteTopHeat": {
+          "kind": "abstext",
+          "label": "对照·上排说明 / 力法方程",
+          "props": {
+            "kh": 42.841,
+            "kw": 78.1551,
+            "lvw": 61.6304,
+            "tvw": 11.0618
+          },
+          "sel": "#app .force-free-canvas > [data-compare-note-heat=\"top\"]"
+        },
+        "compareTopStructureHeat": {
+          "kind": "abs",
+          "label": "对照·上排结构图（荷载）",
+          "props": {
+            "kh": 42.841,
+            "kw": 78.1551,
+            "lvw": 31.3464,
+            "tvw": 6.1378,
+            "wvw": 26.7685
+          },
+          "sel": "#app .force-free-canvas > [data-compare-slot-heat=\"topStructure\"]"
         }
       },
       "ALL": {
@@ -1028,14 +1130,6 @@ window.BEAM_LAYOUT_OVERRIDES = {
             "text": 150
           },
           "sel": "#app .force-control .range-row"
-        },
-        "storyTitle": {
-          "kind": "text",
-          "label": "标题",
-          "props": {
-            "text": 150
-          },
-          "sel": "#app .force-story > h1"
         }
       },
       "CONSOLE": {
@@ -1669,7 +1763,7 @@ window.BEAM_LAYOUT_OVERRIDES = {
       }
     }
   },
-  "savedAt": "2026-10-07 13:36:46",
+  "savedAt": "2026-10-11 09:24:50",
   "transfer": {
     "B": 0,
     "C": 5,
