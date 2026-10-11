@@ -11,8 +11,11 @@ const teacherToken = searchParams.get("token") || "";
 const studentKey = searchParams.get("key") || "";
 const isPreview = role === "student" && searchParams.get("preview") === "1";
 const isSelfGuidedStudent = offlineMode && role === "student" && !isPreview && offlineRuntime.selfGuided === true;
-// A2 的最后一步：教师端（和它的学生预览）多一步 A2-6，页面框里显示 01 阶段的投票页；学生手机仍是 A2-0～A2-5。
-const A2_LAST_STEP = role === "teacher" || isPreview ? 6 : 5;
+// A2 的最后一步：教师端（和它的学生预览）多一步 A2-5，页面框里显示 01 阶段的投票页；学生手机是 A2-0～A2-4。
+const A2_LAST_STEP = role === "teacher" || isPreview ? 5 : 4;
+// heat：A1 共 A1-0～A1-5；A1-4 依次显示四张协调图，A1-5 在最后一张图上显示 FyB 位移公式。
+const A1_LAST_STEP_HEAT = 5;
+const A1_FORCE_LAST_STEP_HEAT = 4;
 const layoutTeacherToken = searchParams.get("teacher_token") || "";
 const layoutMode = isPreview && (
   searchParams.get("layout") === "1"
@@ -40,6 +43,7 @@ const forceStepHeadings = [
   "切开竖向链杆，用力代替它的作用",
   "用力保留链杆的受力作用",
   "同一个 <i>F</i><sub>yB</sub>，比较切开前后的内力图",
+  "力法方程表达的还是位移协调",
 ];
 const DEMO_VOTE_FEEDBACK = {
   participants: 10,
@@ -64,7 +68,7 @@ function customVoteCounts() {
   return counts;
 }
 let lastStage = -1;
-let lastA2VotePage = false;
+let lastViewHeat = "";
 let lastVoteFeedback = null;
 let currentState = null;
 let config = null;
@@ -132,9 +136,37 @@ const DEFORMATION_LABEL_MAP = {
   bottomFyB: "basicFyB",
 };
 
-function deformationStepConfig(step = Number(currentState?.deformation_reveal_step || 0)) {
-  if (currentState?.stage !== 3) return null;
-  return deformationLayout?.steps?.[String([1, 3, 3, 2, 4, 4][step] ?? 1)] || null;
+// heat：A1-5～A2-4 沿用变形图的内部步号 d = 1～6，已删除的「FyB 单独作用」保留空位 d0。
+// 下表是每一页对应的「原步号」（重排前 A2 的步号）：
+//   d1 A1-5 ← 原 A2-2（FyB 引起的B点位移，三联图叠加公式）
+//   d2 A2-0 ← 原 A2-3 的「荷载／温度对照」
+//   d3 A2-1   「弯曲变形的两个来源」整图（画布收起，只显示这张图；背后按原 A2-3 准备）
+//   d4 A2-2 ← 原 A2-3（温度单独作用，三联图叠加 1.5 mm 公式）
+//   d5 A2-3 ← 原 A2-4（叠加 · AI 辅助计算）      d6 A2-4 ← 原 A2-5（B点位移表达式）
+// 状态里存新步号；判断怎么画时换成 d（a2StepHeat）和原步号（a2LegacyStepHeat），原来的画法和数值一处不变。
+const A2_LEGACY_STEPS_HEAT = [1, 2, 3, 3, 3, 4, 5];
+const A2_COMPARE_STEP_HEAT = 2;
+const A2_BEND_SOURCES_STEP_HEAT = 3;
+// 当前是变形图第几页：A1-5 → 1；A2-0～A2-4 → 2～6。
+function a2StepHeat(state = currentState) {
+  if (Number(state?.stage) === 2) return 1;
+  return Math.max(0, Math.min(4, Number(state?.deformation_reveal_step || 0))) + 2;
+}
+function a2LegacyStepHeat(step = a2StepHeat()) {
+  return A2_LEGACY_STEPS_HEAT[Math.max(0, Math.min(6, Number(step) || 0))];
+}
+// 当前页用哪套画面：wait 等待、e 投票、force 受力图（A1-0～A1-4）、deformation 变形图（A1-5～A2-4）、
+// vote A2-5 投票页（只在教师端）、transfer 迁移拓展 M。
+function viewOfHeat(state = currentState) {
+  const stage = Number(state?.stage || 0);
+  if (stage === 2) return Number(state.force_reveal_step || 0) > A1_FORCE_LAST_STEP_HEAT ? "deformation" : "force";
+  if (stage === 3) return isA2VotePage(state) ? "vote" : "deformation";
+  return stage === 0 ? "wait" : stage === 1 ? "e" : "transfer";
+}
+
+function deformationStepConfig(step = a2StepHeat()) {
+  if (viewOfHeat() !== "deformation") return null;
+  return deformationLayout?.steps?.[String([1, 3, 3, 2, 4, 4][a2LegacyStepHeat(step)] ?? 1)] || null;
 }
 
 function normalizeDeformationLayout(layout) {
@@ -308,10 +340,9 @@ function applyForceLayout() {
     if (image.getAttribute("src") !== nextSource) image.src = nextSource;
   });
   if (forceStoryboardRefresh) {
-    const revealStep = currentState?.stage === 3
-      ? Number(currentState.deformation_reveal_step || 0)
-      : Number(currentState?.force_reveal_step || 0);
-    forceStoryboardRefresh(layoutMode && layoutStage !== 3 ? 5 : revealStep);
+    // heat：两套画面的 refresh 都自己从状态里读步号；旧编辑器调 A1 时按 A1-3（全部元素）显示
+    if (layoutMode && layoutStage !== 3) forceStoryboardRefresh(3);
+    else forceStoryboardRefresh();
   }
 }
 
@@ -375,15 +406,16 @@ function createOfflineState() {
     migration_choice: "",
     migration_comment: "",
     migration_submitted: false,
-    compare_open_heat: false, // heat：A2-3、A2-5 的「荷载／温度对照」视图是否打开
-    compare_seen_heat: false, // heat：本步是否已经打开过对照视图（教师端 A2-3 的温度位移公式切回后才显示）
   };
 }
 
 function loadOfflineState() {
   try {
     const saved = JSON.parse(localStorage.getItem(offlineStateKey()) || "null");
-    if (saved?.progress && saved?.vote_counts) return saved;
+    if (saved?.progress && saved?.vote_counts) {
+      saved.force_reveal_step = Math.min(A1_LAST_STEP_HEAT, Number(saved.force_reveal_step || 0));
+      return saved;
+    }
   } catch (_) {}
   const state = createOfflineState();
   localStorage.setItem(offlineStateKey(), JSON.stringify(state));
@@ -403,17 +435,10 @@ function applyOfflineAction(state, action) {
     if (next.stage === 2) next.force_reveal_step = 0;
     if (next.stage === 3) next.deformation_reveal_step = 0;
     if (next.stage === 4) next.migration_answers_visible = false; // 进入 M：学生回答先收起
-    next.compare_open_heat = false; // heat：换阶段时关闭对照视图
-    next.compare_seen_heat = false;
   } else if (action.type === "set_force_reveal") {
-    next.force_reveal_step = Math.max(0, Math.min(3, Number(action.step || 0)));
+    next.force_reveal_step = Math.max(0, Math.min(A1_LAST_STEP_HEAT, Number(action.step || 0)));
   } else if (action.type === "set_deformation_reveal") {
     next.deformation_reveal_step = Math.max(0, Math.min(A2_LAST_STEP, Number(action.step || 0)));
-    next.compare_open_heat = false; // heat：换步时关闭对照视图
-    next.compare_seen_heat = false;
-  } else if (action.type === "set_compare_heat") {
-    next.compare_open_heat = Boolean(action.open);
-    if (action.open) next.compare_seen_heat = true;
   } else if (action.type === "set_voting") {
     next.voting_open = Boolean(action.open);
     if (action.open) {
@@ -707,9 +732,11 @@ function formatNumberHeat(value, digits = 2) {
 function bindForceStoryboard() {
   const sliders = Array.from(document.querySelectorAll("[data-force-slider]"));
   const refresh = (step = currentState.force_reveal_step || 0) => {
-    const numericStep = Math.max(0, Math.min(Number(step), 3));
+    const numericStep = Math.max(0, Math.min(Number(step), A1_FORCE_LAST_STEP_HEAT));
     const story = document.querySelector(".force-story:not(.deformation-story)");
     if (story) story.dataset.revealStep = String(numericStep);
+    updateMethodStepsHeat(numericStep); // heat：右侧「力法步骤」
+    updateStepFigureHeat(story, numericStep === 4, "methodStrip"); // heat：A1-4 三联图
     const heading = document.querySelector(".force-story:not(.deformation-story) h1");
     if (heading) heading.innerHTML = forceStepHeadings[numericStep];
     sliders.forEach((slider) => { slider.value = String(x1); });
@@ -738,6 +765,8 @@ function bindForceStoryboard() {
     const bottomCaption = story?.querySelector("[data-force-bottom-caption]");
     if (topCaption) topCaption.hidden = false;
     if (bottomCaption) bottomCaption.hidden = numericStep < 2;
+    // heat：回忆完力法（A1-1 起），图注后面加「（原结构）」「（基本结构）」
+    story?.querySelectorAll("[data-caption-role-heat]").forEach((role) => { role.hidden = numericStep < 1; });
   };
   forceStoryboardRefresh = refresh;
   sliders.forEach((slider) => {
@@ -759,9 +788,10 @@ function bindDeformationStoryboard() {
   let keyboardInput = false;
   slider.addEventListener('keydown', () => { keyboardInput = true; });
   slider.addEventListener('pointerdown', () => { keyboardInput = false; });
-  const refresh = (step = Number(currentState?.deformation_reveal_step || 0)) => {
-    // 教师端（学生预览）进入 A2-5 时，FyB 滑块默认放在 0.375ql；学生手机不变。
-    if (isPreview && step === 5 && lastDeformationRevealStep !== 5) x1 = .375;
+  const refresh = (stepHeat = a2StepHeat()) => {
+    const step = a2LegacyStepHeat(stepHeat); // heat：下面的判断都按原步号（见 A2_LEGACY_STEPS_HEAT）
+    // A2-4 教师预览和学生页都从满足协调的 FyB = 0.75 kN 开始，随后仍可拖动观察。
+    if (step === 5 && lastDeformationRevealStep !== 5) x1 = .375;
     if (step < 4) {
       aiDeformationEnabled = false;
       aiDeformationProgress = null;
@@ -772,7 +802,7 @@ function bindDeformationStoryboard() {
       if (aiButton) delete aiButton.dataset.computing;
       aiCard?.removeAttribute('aria-busy');
     }
-    // heat：A2-1、A2-2 先看 FyB 单独作用，A2-3 再看温度单独作用（'uniform' 现表示温度单独作用）。
+    // heat：原步号 2（现 A1-5）先看 FyB 位移，原步号 3（现 A2-2）再看温度位移。
     const uniform = step === 3;
     const mode = uniform ? 'uniform' : (step === 1 || step === 2) ? 'fyb' : 'combined';
     deformationBasicX1 = uniform ? 0 : x1;
@@ -816,15 +846,15 @@ function bindDeformationStoryboard() {
         ? '26/26 个采样点 · 变形曲线已生成'
         : '逐点计算 · 计算 26 个采样点位移';
     }
-    applyDeformationStepLayout(step);
+    applyDeformationStepLayout(stepHeat);
     lastDeformationRevealStep = step;
   };
   forceStoryboardRefresh = refresh;
   slider.addEventListener('input', () => {
     const raw = Number(slider.value);
-    const step = Number(currentState.deformation_reveal_step || 0);
+    const step = a2LegacyStepHeat(); // heat：原步号
     x1 = step >= 4 && !keyboardInput && Math.abs(raw - .375) <= .008 ? .375 : raw;
-    refresh(step);
+    refresh();
   });
   slider.addEventListener('change', () => { slider.value = String(x1); api({ type: 'observe_force', x1 }); });
   document.querySelectorAll('[data-special-candidate]').forEach(button => button.addEventListener('click', () => {
@@ -840,11 +870,11 @@ function bindDeformationStoryboard() {
     aiStatus.textContent = '1/26 个采样点 · AI逐点计算中';
     aiCard.setAttribute('aria-busy', 'true');
     aiDeformationProgress = 0;
-    refresh(4);
+    refresh();
     const startedAt = performance.now();
     const duration = 2000;
     const animate = (now) => {
-      if (currentState?.stage !== 3 || Number(currentState.deformation_reveal_step || 0) !== 4) return;
+      if (currentState?.stage !== 3 || a2LegacyStepHeat() !== 4) return;
       aiDeformationProgress = Math.min(1, (now - startedAt) / duration);
       const completedPoints = Math.min(26, Math.floor(aiDeformationProgress * 25) + 1);
       aiStatus.textContent = `${completedPoints}/26 个采样点 · AI逐点计算中`;
@@ -858,10 +888,10 @@ function bindDeformationStoryboard() {
         aiDeformationTimer = null;
         delete aiButton.dataset.computing;
         aiCard.removeAttribute('aria-busy');
-        if (currentState?.stage !== 3 || Number(currentState.deformation_reveal_step || 0) !== 4) return;
+        if (currentState?.stage !== 3 || a2LegacyStepHeat() !== 4) return;
         aiDeformationProgress = null;
         aiDeformationEnabled = true;
-        refresh(4);
+        refresh();
       }, 300);
     };
     if (aiDeformationTimer) clearTimeout(aiDeformationTimer);
@@ -871,7 +901,7 @@ function bindDeformationStoryboard() {
 }
 
 function updateForceReveal(state) {
-  const step = Math.max(0, Math.min(Number(state.force_reveal_step || 0), 3));
+  const step = Math.max(0, Math.min(Number(state.force_reveal_step || 0), A1_FORCE_LAST_STEP_HEAT));
   document.querySelectorAll("[data-reveal]").forEach((element) => {
     element.hidden = Number(element.dataset.reveal) > step;
   });
@@ -889,8 +919,9 @@ function applyDeformationCompareLayout() {
   });
 }
 
-function applyDeformationStepLayout(step) {
-  const stepConfig = deformationStepConfig(step);
+function applyDeformationStepLayout(stepHeat) {
+  const step = a2LegacyStepHeat(stepHeat); // heat：原步号
+  const stepConfig = deformationStepConfig(stepHeat);
   if (!stepConfig) return;
   Object.entries(DEFORMATION_ELEMENT_MAP).forEach(([configSlot, elementSlot]) => {
     const element = document.querySelector(`[data-element-slot="${elementSlot}"]`);
@@ -933,13 +964,12 @@ function applyDeformationStepLayout(step) {
   });
   const formula = document.querySelector("[data-deformation-formula]");
   if (formula) {
-    formula.hidden = ![2, 3, 4, 5].includes(step)
-      || (step === 3 && isPreview && !layoutMode && searchParams.get("tune") !== "1" && !currentState?.compare_seen_heat); // heat
+    formula.hidden = ![2, 3, 4, 5].includes(step);
     if (step >= 2) {
       formula.innerHTML = deformationFormulaHtml(step, deformationBasicX1);
       formula.style.left = `${stepConfig.formula.x / FORCE_CANVAS.width * 100}%`;
       formula.style.top = `${stepConfig.formula.y / FORCE_CANVAS.height * 100}%`;
-      formula.style.color = stepConfig.formula.color;
+      formula.style.color = step >= 4 ? "#17221f" : stepConfig.formula.color;
       formula.style.transform = `scale(${layoutMode ? stepConfig.formula.scale : 1})`;
     }
   }
@@ -956,27 +986,31 @@ function deformationFormulaHtml(step, r = deformationBasicX1) {
   const fyb = '<span class="fraction"><span><i>l</i><sup>3</sup></span><span>3<i>E</i><i>I</i></span></span><i>F</i><sub><i>yB</i></sub>';
   if (step === 2) return `&minus;${fyb}`;
   if (step === 3) return `${uniform} = 1.5 mm`;
-  if (step === 4) return `Δ<sub>B</sub> = ${uniform} &minus; ${fyb}`;
+  const combined = `Δ<sub>B</sub> = <span class="formula-fyb-heat">&minus;${fyb}</span> + <span class="formula-thermal-heat">(${uniform} = 1.5 mm)</span>`;
+  if (step === 4) return combined;
   const result = `${formatNumberHeat(1.5 - 4 * r)} mm`;
-  return `Δ<sub>B</sub> = ${uniform} &minus; ${fyb} = ${result}`;
+  return `${combined} = ${result}`;
 }
 
 function updateDeformationReveal(state) {
   const story = document.querySelector('.deformation-story');
   if (!story) return;
-  const step = Math.max(0, Math.min(Number(state.deformation_reveal_step || 0), 5));
+  const stepHeat = a2StepHeat(state);
+  const step = a2LegacyStepHeat(stepHeat); // heat：画法按原步号；data-reveal-step 也写原步号（styles.css 按它排公式）
   const visible = new Set(['originalStructure', 'originalMomentBg', 'basicStructure', 'basicMomentBg']);
   story.dataset.revealStep = String(step);
+  story.dataset.a2StepHeat = String(stepHeat);
   story.classList.add('deformation-compare');
   story.classList.toggle('deformation-decomposed', step >= 1);
   story.querySelector('h1').innerHTML = [
-    '可是，切开竖向链杆时，我们到底拿走了什么？',
     '先看 <i>F</i><sub>yB</sub> 单独作用',
     '<i>F</i><sub>yB</sub> 引起的B点位移',
+    '荷载／温度对照',
+    '弯曲变形的两个来源',
     '再看温度单独作用',
     '将温度与 <i>F</i><sub>yB</sub> 叠加起来',
     '写出B点位移的叠加表达式',
-  ][step];
+  ][stepHeat];
   story.querySelectorAll('[data-element-slot]').forEach(element => { element.hidden = !visible.has(element.dataset.elementSlot); });
   story.querySelectorAll('[data-force-label-slot]').forEach(label => { label.hidden = step === 3 && label.dataset.forceLabelSlot === 'basicFyB'; });
   story.querySelector('[data-deformation-load]').hidden = step === 0;
@@ -985,9 +1019,14 @@ function updateDeformationReveal(state) {
   story.querySelectorAll('[data-structure-caption]').forEach(label => { label.hidden = false; });
   applyForceLayout();
   applyDeformationCompareLayout();
-  if (forceStoryboardRefresh) forceStoryboardRefresh(step);
-  applyDeformationStepLayout(step);
-  updateCompareViewHeat(state, step); // heat
+  if (forceStoryboardRefresh) forceStoryboardRefresh(stepHeat);
+  applyDeformationStepLayout(stepHeat);
+  updateCompareViewHeat(state, stepHeat); // heat：A2-0 荷载／温度对照
+  const figureKind = Number(state.stage) === 2 ? "fybDisplacement"
+    : stepHeat === A2_BEND_SOURCES_STEP_HEAT ? "bendSources"
+    : Number(state.deformation_reveal_step) === 2 ? "thermalDisplacement" : null;
+  updateStepFigureHeat(story, Boolean(figureKind), figureKind);
+  updateMethodStepsHeat(Number(state.stage) === 2 ? Number(state.force_reveal_step || 0) : -1);
 }
 
 function renderForce() {
@@ -997,9 +1036,11 @@ function renderForce() {
         ${Object.keys(FORCE_ELEMENT_META).map(forceElementHtml).join("")}
         <div class="force-transition-arrow" data-force-transition-arrow hidden aria-label="由超静定结构指向静定结构"></div>
         <div class="deformation-row-divider" data-force-compare-decoration hidden aria-hidden="true"></div>
-        <div class="structure-caption top-caption force-stage-caption" data-force-top-caption hidden>未知的超静定结构</div>
-        <div class="structure-caption bottom-caption force-stage-caption" data-force-bottom-caption hidden>已知的静定结构</div>
+        <div class="structure-caption top-caption force-stage-caption" data-force-top-caption hidden>未知的超静定结构<span class="caption-role-heat" data-caption-role-heat hidden>（原结构）</span></div>
+        <div class="structure-caption bottom-caption force-stage-caption" data-force-bottom-caption hidden>已知的静定结构<span class="caption-role-heat" data-caption-role-heat hidden>（基本结构）</span></div>
       </div>
+      ${stepFigureHtmlHeat("methodStrip")}
+      ${methodStepsHtmlHeat()}
       <div class="force-controls">
         <aside class="control-card force-control" data-reveal="3" hidden><div class="range-row"><input data-force-slider type="range" min="0" max="1" step="0.005" value="${x1}" aria-label="原结构FyB滑块"/><strong data-force-value></strong></div><div data-force-readouts></div><p class="hint">拖动同一个 F<sub>yB</sub>，上下两组内力图同步更新。</p></aside>
       </div>
@@ -1019,8 +1060,12 @@ function renderDeformation() {
     <div class="force-composition deformation-composition">
       <div class="force-free-canvas" aria-label="切开竖向链杆前后的受力对照">
         <div class="deformation-row-divider" data-deformation-divider hidden aria-hidden="true"></div>
-        ${slots.map(forceElementHtml).join("")}<div class="structure-caption top-caption" data-structure-caption>未知的超静定结构</div><div class="structure-caption bottom-caption" data-structure-caption>已知的静定结构</div>
+        ${slots.map(forceElementHtml).join("")}<div class="structure-caption top-caption" data-structure-caption>未知的超静定结构<span class="caption-role-heat">（原结构）</span></div><div class="structure-caption bottom-caption" data-structure-caption>已知的静定结构<span class="caption-role-heat">（基本结构）</span></div>
       </div>
+      ${stepFigureHtmlHeat("bendSources")}
+      ${stepFigureHtmlHeat("fybDisplacement")}
+      ${stepFigureHtmlHeat("thermalDisplacement")}
+      ${methodStepsHtmlHeat()}
       <div class="force-controls">
         <aside class="control-card force-control"><section class="ai-deformation-card" data-ai-deformation-card hidden><div class="ai-deformation-heading"><span>AI</span><strong>辅助生成整梁变形</strong></div><button type="button" class="primary ai-deformation-button" data-ai-deformation-button>启动 AI 辅助计算</button><small data-ai-deformation-status>逐点计算 · 计算 26 个采样点位移</small></section><div class="range-row"><input data-force-slider data-force-channel="basic" type="range" min="0" max="1" step="0.005" value="0" aria-label="切开链杆后FyB滑块"/><strong data-force-value></strong></div><div class="special-candidates" data-special-candidates hidden><button class="secondary" data-special-candidate="0"><i>F</i><sub>yB</sub>＝0</button><button class="secondary" data-special-candidate="0.25"><i>F</i><sub>yB</sub>＝0.5 kN</button><button class="secondary" data-special-candidate="0.5"><i>F</i><sub>yB</sub>＝1 kN</button></div><div data-force-readouts></div><p class="hint">上下滑块同步，两组内力图同步变化。</p></aside>
       </div>
@@ -1041,19 +1086,114 @@ function renderDeformation() {
   updateDeformationReveal(currentState);
 }
 
-// ===== heat：「荷载／温度对照」视图（A2-3、A2-5；教师端银色面板按钮切入、切回） =====
+// ===== heat：A1 右侧「力法步骤」框；协调图与位移公式 =====
+// 「力法步骤」：A1-1～A1-5 显示。「1. 定基本结构」一直亮着（有颜色），
+// 「2. 列力法方程」从 A1-4 起亮，之前是灰色。教师端放在右上角（滑块卡片上方），窄屏和手机放在画布上面（styles.css）。
+// 版面调试里叫「「力法步骤」框」。
+function methodStepsHtmlHeat() {
+  return '<aside class="method-steps-heat" data-method-steps-heat hidden aria-label="力法步骤"><h2>力法步骤</h2><ol>'
+    + '<li data-method-step-heat="1">1. 定基本结构</li><li data-method-step-heat="2">2. 列力法方程</li></ol></aside>';
+}
+
+// step：A1 的步号（0～5）；A2 各页传 -1，框收起。
+function updateMethodStepsHeat(step) {
+  const box = document.querySelector("[data-method-steps-heat]");
+  if (!box) return;
+  box.hidden = layoutMode || step < 1;
+  box.querySelectorAll("[data-method-step-heat]").forEach((item) => {
+    item.classList.toggle("is-active-heat", item.dataset.methodStepHeat === "1" || step >= 4);
+  });
+}
+
+// 整图页按原比例显示；公式与背景共用 SVG 坐标，缩放后仍对准图片里的位移符号。
+const METHOD_STRIP_FRAMES_HEAT = [1, 2, 3, 4].map(number => `/assets/force-story/scene/A1-4-增补-新-${number}.png`);
+const stepFigurePlaybackHeat = new WeakMap();
+const STEP_FORMULAS_HEAT = {
+  fyb: { step: 2, x: 1165, y: 555, width: 515, height: 250, color: "#008000" },
+  thermal: { step: 3, x: 2940, y: 555, width: 520, height: 380, color: "#800080" },
+};
+const STEP_FIGURES_HEAT = {
+  methodStrip: { frames: METHOD_STRIP_FRAMES_HEAT, alt: "基本结构在 FyB 作用下和在温度作用下的 B 点位移，原结构 B 点位移为零" },
+  fybDisplacement: { src: METHOD_STRIP_FRAMES_HEAT[3], alt: "FyB 引起的 B 点位移：δ11 FyB = −l³ FyB / (3EI)", formulas: ["fyb"] },
+  thermalDisplacement: { src: "/assets/force-story/scene/A1-4-增补-新-5.png", alt: "力位移与温度位移：δ11 FyB = −l³ FyB / (3EI)，Δ1T = αΔt l² / (2h) = 1.5 mm", formulas: ["fyb", "thermal"] },
+  bendSources: { src: "/assets/force-story/scene/bend-sources-heat.png", alt: "弯曲变形的两个来源：由弯矩引起的用 M/EI 表示、用图乘法计算；由温度引起的不在 M/EI 里，要用温度位移公式" },
+};
+
+function stepFigureHtmlHeat(kind) {
+  const figure = STEP_FIGURES_HEAT[kind];
+  let content;
+  if (figure.formulas) {
+    content = `<svg viewBox="0 0 5200 1715" role="img" aria-label="${figure.alt}">
+      <image href="${runtimeUrl(figure.src)}" width="5200" height="1715"/>
+      ${figure.formulas.map(key => {
+        const formula = STEP_FORMULAS_HEAT[key];
+        const html = deformationFormulaHtml(formula.step).replace(" = ", "<br/>= ");
+        return `<g data-figure-formula-heat="${key}" style="--heat-formula-x:${formula.x}px;--heat-formula-y:${formula.y}px;--heat-formula-scale:1">
+          <foreignObject x="0" y="0" width="${formula.width}" height="${formula.height}">
+            <div xmlns="http://www.w3.org/1999/xhtml" class="step-figure-formula-heat" style="color:${formula.color}">= ${html}</div>
+          </foreignObject>
+        </g>`;
+      }).join("")}
+    </svg>`;
+  } else {
+    content = (figure.frames || [figure.src]).map((src, index) => `<img src="${runtimeUrl(src)}" alt="${figure.alt}" ${index ? "hidden" : ""}/>`).join("");
+  }
+  return `<figure class="step-figure-heat" data-step-figure-heat="${kind}" hidden>${content}</figure>`;
+}
+
+function methodStripIntervalHeat(figure) {
+  const seconds = parseFloat(getComputedStyle(figure).getPropertyValue("--heat-frame-interval"));
+  return Number.isFinite(seconds) ? Math.max(.05, Math.min(10, seconds)) : .2;
+}
+
+function playMethodStripHeat(figure) {
+  const frames = [...figure.querySelectorAll("img")];
+  clearTimeout(stepFigurePlaybackHeat.get(figure)?.timer);
+  const playback = { timer: null, interval: methodStripIntervalHeat(figure) };
+  stepFigurePlaybackHeat.set(figure, playback);
+  frames.forEach((frame, index) => { frame.hidden = index !== 0; });
+  // 先解码四张本地图片，播放时只切换可见性，避免换 src 出现空白帧。
+  Promise.all(frames.map(frame => frame.decode().catch(() => {}))).then(() => {
+    // 页码对应的编辑样式由观察器更新；开始计时前读取，避免沿用上一页的默认间隔。
+    playback.interval = methodStripIntervalHeat(figure);
+    let index = 0;
+    const advance = () => {
+      if (stepFigurePlaybackHeat.get(figure) !== playback || figure.hidden || !figure.isConnected) return;
+      playback.timer = setTimeout(() => {
+        if (stepFigurePlaybackHeat.get(figure) !== playback || figure.hidden || !figure.isConnected) return;
+        frames[index].hidden = true;
+        frames[++index].hidden = false;
+        if (index < frames.length - 1) advance();
+      }, playback.interval * 1000);
+    };
+    advance();
+  });
+}
+
+function updateStepFigureHeat(story, on, kind) {
+  if (!story) return;
+  story.toggleAttribute("data-figure-heat", Boolean(on));
+  story.querySelectorAll("[data-step-figure-heat]").forEach(figure => {
+    const active = Boolean(on) && figure.dataset.stepFigureHeat === kind;
+    const entering = active && figure.hidden;
+    figure.hidden = !active;
+    if (!active) {
+      clearTimeout(stepFigurePlaybackHeat.get(figure)?.timer);
+      stepFigurePlaybackHeat.delete(figure);
+    } else if (kind === "methodStrip" && (entering || stepFigurePlaybackHeat.get(figure)?.interval !== methodStripIntervalHeat(figure))) {
+      playMethodStripHeat(figure);
+    }
+  });
+}
+
+// ===== heat：「荷载／温度对照」（A2-0。原来是 A2-3 里用按钮切入的对照视图，现在单独成一步，教师端和学生手机都有） =====
 // 上排荷载（V6 的均布荷载素材和公式），下排温度；每排一张弯矩图、一张结构图（带变形曲线）、一段说明。
-// 图片位置、缩放、素材和数值标签的默认偏移在 offline-data.js 的 compareHeat 里；曲线标定沿用同一步主视图的版式
-// （A2-3 → 版式 2，A2-5 → 版式 4）。版面调试（layout-tuner.js）里可以拖动、改数值和说明文字。
+// 图片位置、缩放、素材和数值标签的默认偏移在 offline-data.js 的 compareHeat["3"] 里（键沿用原步号 3）；
+// 曲线标定沿用温度单独作用的版式 2。版面调试（layout-tuner.js）里可以拖动、改数值和说明文字。
+// 左上角图注是「荷载作用」「温度作用」，右边说明接着读：荷载作用——有弯矩，也有相应的弯曲变形；温度作用——没有弯矩，也能产生弯曲变形。
 const COMPARE_NOTES_HEAT = {
-  3: {
-    top: "先有弯矩，<br>才有变形<br><small>（由力求形）</small>",
-    bottom: "没有弯矩，<br>也有变形<br><small>（温度直接给形）</small>",
-  },
-  5: {
-    top: "<i>δ</i><sub>11</sub><i>F</i><sub>yB</sub> + <i>Δ</i><sub>1P</sub> = 0",
-    bottom: "<i>δ</i><sub>11</sub><i>F</i><sub>yB</sub> + <i>Δ</i><sub>1t</sub> = 0",
-  },
+  top: "有弯矩，<br>也有相应的<br>弯曲变形",
+  bottom: "没有弯矩，<br>也能产生<br>弯曲变形",
 };
 
 // 上排（荷载）用的弯矩和标注：内容照抄 V6 的 forceCurveResponse、formatForceValue（ql 单位）。
@@ -1089,31 +1229,27 @@ function compareViewHtmlHeat() {
       : `<canvas class="deformation-load-canvas" data-compare-deformation-heat width="1000" height="${height}"></canvas>`;
     const label = isMoment
       ? `<span class="force-live-value force-live-value-ma compare-label-heat" data-compare-label-heat="${row}MA"></span>`
-      : `<span class="force-live-value force-live-value-fyb compare-label-heat" data-compare-label-heat="${row}FyB" hidden></span>`;
+      : "";
     return `<div class="force-free-element${isMoment ? " force-diagram-element" : ""} compare-element-heat" data-compare-slot-heat="${slot}" style="--element-ratio:${meta.ratio}" hidden>${canvas}<img alt="${isMoment ? "弯矩图" : "结构图"}"/>${isMoment ? '<div class="moment-diagram-title">弯矩图</div>' : ""}${label}</div>`;
   };
   return ["topMoment", "topStructure", "bottomMoment", "bottomStructure"].map(slotHtml).join("")
     + '<div class="compare-caption-heat" data-compare-caption-heat="top" hidden>荷载作用</div>'
     + '<div class="compare-caption-heat" data-compare-caption-heat="bottom" hidden>温度作用</div>'
-    + '<div class="compare-note-heat" data-compare-note-heat="top" hidden></div>'
-    + '<div class="compare-note-heat" data-compare-note-heat="bottom" hidden></div>';
+    + `<div class="compare-note-heat" data-compare-note-heat="top" hidden>${COMPARE_NOTES_HEAT.top}</div>`
+    + `<div class="compare-note-heat" data-compare-note-heat="bottom" hidden>${COMPARE_NOTES_HEAT.bottom}</div>`;
 }
 
 function compareActiveHeat(state = currentState) {
-  const step = Number(state?.deformation_reveal_step || 0);
-  // 只在教师端的学生预览（投屏）里出现；学生手机没有对照视图
-  return isPreview && Number(state?.stage) === 3 && Boolean(state?.compare_open_heat) && (step === 3 || step === 5);
+  return Number(state?.stage) === 3 && a2StepHeat(state) === A2_COMPARE_STEP_HEAT;
 }
 
-function updateCompareViewHeat(state, step) {
+function updateCompareViewHeat(state, stepHeat) {
   const story = document.querySelector(".deformation-story");
   if (!story) return;
   const on = compareActiveHeat(state);
   story.classList.toggle("compare-active-heat", on);
   story.querySelectorAll("[data-compare-slot-heat], [data-compare-caption-heat], [data-compare-note-heat]").forEach((element) => { element.hidden = !on; });
-  if (!on) return;
-  story.querySelector("h1").innerHTML = "荷载／温度对照";
-  drawCompareViewHeat(step);
+  if (on) drawCompareViewHeat(stepHeat);
 }
 
 // 弯矩数值标签跟着曲线走（与 applyDeformationStepLayout 里主视图的 MA 标签同一算法）。
@@ -1129,14 +1265,14 @@ function placeCompareMomentLabelHeat(label, position, numeric, responseAt) {
   label.style.transform = `${curveIsAbove ? "translateY(-100%)" : "translateY(0)"} scale(${layoutMode ? position.scale : 1})`;
 }
 
-function drawCompareViewHeat(step) {
-  const config = deformationStepConfig(step);
+function drawCompareViewHeat(stepHeat) {
+  const config = deformationStepConfig(stepHeat);
   // 旧编辑器早先存在本机浏览器里的版式可能没有 compareHeat，这时用 offline-data.js 里的默认值
-  const layout = (deformationLayout?.compareHeat || window.BEAM_OFFLINE_DEFORMATION_LAYOUT?.compareHeat)?.[String(step)];
+  const layout = (deformationLayout?.compareHeat || window.BEAM_OFFLINE_DEFORMATION_LAYOUT?.compareHeat)?.["3"];
   if (!config || !layout) return;
   const numeric = config.numeric;
-  const r = step === 5 ? THEORETICAL_FYB_RATIO : 0; // A2-3：两排 FyB = 0；A2-5：两排都取真解（0.375ql、0.75 kN）
-  const mode = step === 5 ? "combined" : "uniform"; // 'uniform'：上排为荷载单独作用，下排为温度单独作用
+  const r = 0; // 两排都没有 FyB
+  const mode = "uniform"; // 'uniform'：上排为荷载单独作用，下排为温度单独作用
   ["topMoment", "topStructure", "bottomMoment", "bottomStructure"].forEach((slot) => {
     const element = document.querySelector(`[data-compare-slot-heat="${slot}"]`);
     const position = layout.elements?.[slot];
@@ -1150,29 +1286,17 @@ function drawCompareViewHeat(step) {
     const image = element.querySelector("img");
     const source = runtimeUrl(layout.assets?.[slot]);
     if (image && source && image.getAttribute("src") !== source) image.src = source;
-    const label = element.querySelector("[data-compare-label-heat]");
-    const labelPosition = layout.labels?.[label?.dataset.compareLabelHeat];
     if (isMoment) {
       const response = isLoad ? loadCurveResponseHeat : forceCurveResponse;
       drawForceCurve(element.querySelector("[data-compare-moment-heat]"), r, "moment", "basic", mode, { responseHeat: response });
+      const label = element.querySelector("[data-compare-label-heat]");
+      const labelPosition = layout.labels?.[label?.dataset.compareLabelHeat];
       if (!label || !labelPosition) return;
       label.innerHTML = isLoad ? formatLoadValueHeat("ma", r, mode) : formatForceValue("ma", r, mode);
       placeCompareMomentLabelHeat(label, labelPosition, numeric, (s) => response("moment", r, s, mode));
       return;
     }
     drawDecompositionStructure(element.querySelector("[data-compare-deformation-heat]"), mode, r, { shapeHeat: isLoad ? "load" : "heat" });
-    if (!label) return;
-    label.hidden = step !== 5 || !labelPosition;
-    if (label.hidden) return;
-    label.innerHTML = isLoad ? formatLoadValueHeat("fyb", r, mode) : formatForceValue("fyb", r, mode);
-    label.style.left = `${labelPosition.x}%`;
-    label.style.top = `${labelPosition.y}%`;
-    label.style.transform = `scale(${layoutMode ? labelPosition.scale : 1})`;
-  });
-  document.querySelectorAll("[data-compare-note-heat]").forEach((note) => {
-    if (note.dataset.stepHeat === String(step)) return;
-    note.innerHTML = COMPARE_NOTES_HEAT[step]?.[note.dataset.compareNoteHeat] || "";
-    note.dataset.stepHeat = String(step);
   });
 }
 
@@ -1444,8 +1568,9 @@ function drawDecompositionStructure(canvas, mode, r, optionsHeat = null) {
   const previousLabel = canvas.parentElement.querySelector(".endpoint-label");
   if (previousLabel) previousLabel.hidden = true;
   const ctx = canvas.getContext("2d");
-  const customStep = Number(currentState?.deformation_reveal_step || 0);
-  const customConfig = deformationStepConfig(customStep);
+  const stepHeat = a2StepHeat();
+  const customStep = a2LegacyStepHeat(stepHeat); // heat：原步号
+  const customConfig = deformationStepConfig(stepHeat);
   if (customConfig) {
     const numeric = customConfig.numeric;
     const isTopCurve = canvas.dataset.deformationSystem === "top";
@@ -1629,7 +1754,7 @@ function drawDecompositionStructure(canvas, mode, r, optionsHeat = null) {
   let image = deformationComponentImages[mode];
   if (!image) {
     image = new Image();
-    image.onload = () => forceStoryboardRefresh?.(Number(currentState?.deformation_reveal_step || 0));
+    image.onload = () => forceStoryboardRefresh?.();
     image.src = runtimeUrl(asset.src);
     deformationComponentImages[mode] = image;
   }
@@ -2135,7 +2260,7 @@ function voteBars(counts = {agree:0,doubt:0,unsure:0}) {
 
 async function setTeacherStage(stage, returnToLast = false) {
   await api({ type: "set_stage", stage });
-  if (returnToLast && stage === 2) await api({ type: "set_force_reveal", step: 3 });
+  if (returnToLast && stage === 2) await api({ type: "set_force_reveal", step: A1_LAST_STEP_HEAT });
   if (returnToLast && stage === 3) await api({ type: "set_deformation_reveal", step: A2_LAST_STEP });
 }
 
@@ -2146,7 +2271,7 @@ function renderTeacher(state) {
     app.innerHTML = `<section class="teacher-cockpit" id="teacherCockpit">
       <div class="teacher-command-bar panel">
         <div><p class="eyebrow">教师控制台 · 单页运行</p><h2 id="teacherStageTitle"></h2><p class="hint" id="teacherStageDescription"></p></div>
-        <div class="stage-nav"><button class="secondary" id="previousStage">上一步</button><button class="primary" id="nextStage">发布下一步</button><button class="vote-control end-vote" id="endVote">结束选择</button><button class="vote-control reopen-vote" id="reopenVote">重新开放</button><button class="vote-control" id="showAnswers">显示回答</button><button class="vote-control" id="hideAnswers">收起回答</button><div class="force-reveal-grid" id="forceRevealGrid" aria-label="验证分析 A1 呈现进度">${[1,2,3,4,5,6].map(step => `<button type="button" data-force-reveal-step="${step}" aria-label="呈现到第${step}项">${step}</button>`).join("")}</div><button class="reveal-control" id="forceRevealNext">呈现下一项</button><button class="secondary" id="forceRevealReset">重置呈现</button><button class="vote-control" id="toggleCompareHeat" hidden>荷载／温度对照</button><button class="secondary" id="focusPreview">放大学生预览</button>${layoutToolsEnabled ? `<button class="secondary" id="openLayoutEditor">版面调试</button>` : ""}</div>
+        <div class="stage-nav"><button class="secondary" id="previousStage">上一步</button><button class="primary" id="nextStage">发布下一步</button><button class="vote-control end-vote" id="endVote">结束选择</button><button class="vote-control reopen-vote" id="reopenVote">重新开放</button><button class="vote-control" id="showAnswers">显示回答</button><button class="vote-control" id="hideAnswers">收起回答</button><div class="force-reveal-grid" id="forceRevealGrid" aria-label="验证分析 A1 呈现进度">${[1,2,3,4,5,6].map(step => `<button type="button" data-force-reveal-step="${step}" aria-label="呈现到第${step}项">${step}</button>`).join("")}</div><button class="reveal-control" id="forceRevealNext">呈现下一项</button><button class="secondary" id="forceRevealReset">重置呈现</button><button class="secondary" id="focusPreview">放大学生预览</button>${layoutToolsEnabled ? `<button class="secondary" id="openLayoutEditor">版面调试</button>` : ""}</div>
         <span class="frame-guard frame-guard-left" aria-hidden="true"></span><span class="frame-guard frame-guard-right" aria-hidden="true"></span>
       </div>
       <div class="stage-roadmap">${roadmap}</div>
@@ -2168,7 +2293,6 @@ function renderTeacher(state) {
     document.querySelector("#hideAnswers").addEventListener("click", () => api({type:"set_migration_answers",visible:false}));
     document.querySelector("#endVote").addEventListener("click", () => api({type:"show_vote_feedback"}));
     document.querySelector("#reopenVote").addEventListener("click", () => api({type:"set_voting",open:true}));
-    document.querySelector("#toggleCompareHeat").addEventListener("click", () => api({ type: "set_compare_heat", open: !currentState.compare_open_heat })); // heat
     document.querySelector("#forceRevealNext").addEventListener("click", () => {
       if (currentState.stage === 3) {
         const supportsDeformationReveal = currentState.deformation_reveal_step != null;
@@ -2180,7 +2304,7 @@ function renderTeacher(state) {
           step: Math.min(A2_LAST_STEP, currentStep + 1),
         });
       }
-      return api({type:"set_force_reveal",step:Math.min(3,(currentState.force_reveal_step || 0)+1)});
+      return api({type:"set_force_reveal",step:Math.min(A1_LAST_STEP_HEAT,(currentState.force_reveal_step || 0)+1)});
     });
     document.querySelector("#forceRevealReset").addEventListener("click", () => api({
       type: currentState.stage === 3 && currentState.deformation_reveal_step != null ? "set_deformation_reveal" : "set_force_reveal",
@@ -2227,24 +2351,18 @@ function renderTeacher(state) {
   hideAnswers.hidden = state.stage !== 4;
   showAnswers.disabled = Boolean(state.migration_answers_visible);
   hideAnswers.disabled = !state.migration_answers_visible;
-  // heat：「荷载／温度对照」按钮只在 A2-3、A2-5 出现；打开后文字改成「切回原视图」
-  const compareButtonHeat = document.querySelector("#toggleCompareHeat");
-  const compareStepHeat = state.stage === 3 && [3, 5].includes(Number(state.deformation_reveal_step || 0));
-  compareButtonHeat.hidden = !compareStepHeat;
-  compareButtonHeat.textContent = state.compare_open_heat ? "切回原视图" : "荷载／温度对照";
-  compareButtonHeat.classList.toggle("active", compareStepHeat && Boolean(state.compare_open_heat));
   const forceRevealNext = document.querySelector("#forceRevealNext");
   const forceRevealReset = document.querySelector("#forceRevealReset");
   const forceRevealGrid = document.querySelector("#forceRevealGrid");
   const revealStep = state.stage === 3
     ? (state.deformation_reveal_step == null ? (Number(state.force_reveal_step) === 1 ? 1 : 0) : Number(state.deformation_reveal_step || 0))
     : (state.force_reveal_step || 0);
-  const revealMax = state.stage === 3 ? A2_LAST_STEP : 3;
+  const revealMax = state.stage === 3 ? A2_LAST_STEP : A1_LAST_STEP_HEAT;
   forceRevealGrid.hidden = state.stage !== 2 && state.stage !== 3;
   forceRevealGrid.setAttribute("aria-label", state.stage === 3 ? "验证分析 A2 呈现进度" : "验证分析 A1 呈现进度");
   forceRevealGrid.querySelectorAll("[data-force-reveal-step]").forEach(button => {
     const step = Number(button.dataset.forceRevealStep);
-    button.hidden = state.stage === 2 && step > 3;
+    button.hidden = step > revealMax; // A1、A2 均显示五个步骤键。
     const currentRevealStep = state.stage === 3 ? revealStep : Number(state.force_reveal_step || 0);
     const active = step <= currentRevealStep;
     button.classList.toggle("active", active);
@@ -2260,27 +2378,28 @@ function renderTeacher(state) {
   nextButton.textContent = state.stage === 4 ? "返回PPT" : `下一步：${stageLabels[state.stage + 1]}`;
 }
 
-// A2-6（只在教师端的学生预览里）：页面框里显示 01 阶段的投票页。
+// A2-5（只在教师端的学生预览里）：页面框里显示 01 阶段的投票页。
 function isA2VotePage(state = currentState) {
-  return isPreview && Number(state?.stage) === 3 && Number(state?.deformation_reveal_step || 0) === 6;
+  return isPreview && Number(state?.stage) === 3 && Number(state?.deformation_reveal_step || 0) === A2_LAST_STEP;
 }
 
 function renderStudent() {
-  if (isA2VotePage()) renderVote(true);
-  else [renderWaiting, renderVote, renderForce, renderDeformation, renderTransfer][Math.min(currentState.stage, 4)]();
+  const view = viewOfHeat();
+  if (view === "vote") renderVote(true);
+  else ({ wait: renderWaiting, e: renderVote, force: renderForce, deformation: renderDeformation, transfer: renderTransfer })[view]();
   mountSelfGuidedNavigation();
 }
 
 function selfGuidedStep(stage = currentState.stage) {
-  if (stage === 2) return Math.max(0, Math.min(3, Number(currentState.force_reveal_step || 0)));
-  if (stage === 3) return Math.max(0, Math.min(5, Number(currentState.deformation_reveal_step || 0)));
+  if (stage === 2) return Math.max(0, Math.min(A1_LAST_STEP_HEAT, Number(currentState.force_reveal_step || 0)));
+  if (stage === 3) return Math.max(0, Math.min(A2_LAST_STEP, Number(currentState.deformation_reveal_step || 0)));
   return 0;
 }
 
 function selfGuidedNavigationHtml() {
   const stage = Number(currentState.stage || 1);
   const step = selfGuidedStep(stage);
-  const substepMax = stage === 2 ? 3 : stage === 3 ? 5 : 0;
+  const substepMax = stage === 2 ? A1_LAST_STEP_HEAT : stage === 3 ? A2_LAST_STEP : 0;
   const stageButtons = [1, 2, 3, 4].map(number => `
     <button type="button" class="self-stage-button${number === stage ? " current" : ""}" data-self-stage="${number}">
       <span>0${number}</span>${stageLabels[number]}
@@ -2306,18 +2425,21 @@ function selfGuidedNavigationHtml() {
 async function setSelfGuidedPosition(targetStage, targetStep = 0) {
   const stage = Math.max(1, Math.min(4, Number(targetStage || 1)));
   const stageChanged = stage !== currentState.stage;
+  const viewBefore = viewOfHeat(currentState);
   if (stageChanged) await api({ type: "set_stage", stage });
-  if (stage === 2) await api({ type: "set_force_reveal", step: Math.max(0, Math.min(3, Number(targetStep || 0))) });
-  if (stage === 3) await api({ type: "set_deformation_reveal", step: Math.max(0, Math.min(5, Number(targetStep || 0))) });
+  if (stage === 2) await api({ type: "set_force_reveal", step: Math.max(0, Math.min(A1_LAST_STEP_HEAT, Number(targetStep || 0))) });
+  if (stage === 3) await api({ type: "set_deformation_reveal", step: Math.max(0, Math.min(A2_LAST_STEP, Number(targetStep || 0))) });
   document.body.dataset.stage = String(currentState.stage);
-  if (stageChanged) {
-    renderStudent();
-    lastStage = currentState.stage;
+  const view = viewOfHeat(currentState);
+  if (stageChanged || view !== viewBefore) {
+    renderStudent(); // heat：A1-4 → A1-5 换成变形图画面，也要重画
   } else {
-    if (stage === 2) updateForceReveal(currentState);
-    if (stage === 3) updateDeformationReveal(currentState);
+    if (view === "force") updateForceReveal(currentState);
+    if (view === "deformation") updateDeformationReveal(currentState);
     mountSelfGuidedNavigation();
   }
+  lastStage = currentState.stage;
+  lastViewHeat = view;
 }
 
 function mountSelfGuidedNavigation() {
@@ -2335,9 +2457,9 @@ function mountSelfGuidedNavigation() {
   document.querySelector('[data-self-nav="previous"]')?.addEventListener("click", () => {
     const stage = currentState.stage;
     const step = selfGuidedStep(stage);
-    if (stage === 4) return setSelfGuidedPosition(3, 5);
+    if (stage === 4) return setSelfGuidedPosition(3, A2_LAST_STEP);
     if (stage === 3 && step > 0) return setSelfGuidedPosition(3, step - 1);
-    if (stage === 3) return setSelfGuidedPosition(2, 3);
+    if (stage === 3) return setSelfGuidedPosition(2, A1_LAST_STEP_HEAT);
     if (stage === 2 && step > 0) return setSelfGuidedPosition(2, step - 1);
     if (stage === 2) return setSelfGuidedPosition(1, 0);
   });
@@ -2345,9 +2467,9 @@ function mountSelfGuidedNavigation() {
     const stage = currentState.stage;
     const step = selfGuidedStep(stage);
     if (stage === 1) return setSelfGuidedPosition(2, 0);
-    if (stage === 2 && step < 3) return setSelfGuidedPosition(2, step + 1);
+    if (stage === 2 && step < A1_LAST_STEP_HEAT) return setSelfGuidedPosition(2, step + 1);
     if (stage === 2) return setSelfGuidedPosition(3, 0);
-    if (stage === 3 && step < 5) return setSelfGuidedPosition(3, step + 1);
+    if (stage === 3 && step < A2_LAST_STEP) return setSelfGuidedPosition(3, step + 1);
     if (stage === 3) return setSelfGuidedPosition(4, 0);
   });
 }
@@ -2357,11 +2479,16 @@ async function tick() {
     const loadedState = await loadState();
     const state = layoutMode
       ? layoutStage === 3 && (layoutStep === 1 || layoutStep === 2 || layoutStep === 3 || layoutStep === 4)
-        ? { ...loadedState, stage: 3, deformation_reveal_step: ({ 1: 0, 2: 3, 3: 2, 4: 4 })[layoutStep] } // heat：版式 1/2/3/4 → A2-0/3/2/4
-        : { ...loadedState, stage: 2, force_reveal_step: 5 }
+        ? ({ // heat：版式 2/3/4 → A2-2、A1-5、A2-3；版式 1 借 A1-5 显示
+          1: { ...loadedState, stage: 2, force_reveal_step: 5 },
+          2: { ...loadedState, stage: 3, deformation_reveal_step: 2 },
+          3: { ...loadedState, stage: 2, force_reveal_step: 5 },
+          4: { ...loadedState, stage: 3, deformation_reveal_step: 3 },
+        })[layoutStep]
+        : { ...loadedState, stage: 2, force_reveal_step: 3 }
       : loadedState;
     currentState = state;
-    // A2-6 的页面框里是 01 阶段的投票页：按 01 阶段的样子排版。
+    // A2-5 的页面框里是 01 阶段的投票页：按 01 阶段的样子排版。
     document.body.dataset.stage = String(isA2VotePage(state) ? 1 : state.stage);
     if (isPreview && state.stage !== lastStage) {
       previewSeconds = 0;
@@ -2374,15 +2501,16 @@ async function tick() {
     } else {
       sessionPill.textContent = `${role === "teacher" ? "教师端" : "学生端"} · ${state.session_id}`;
     }
+    const view = viewOfHeat(state);
     if (role === "teacher") renderTeacher(state);
-    else if (state.stage !== lastStage || isA2VotePage(state) !== lastA2VotePage) renderStudent();
+    else if (state.stage !== lastStage || view !== lastViewHeat) renderStudent(); // heat：换阶段或换画面（如 A1-4 → A1-5）时重画
     else if (state.stage === 1 && Boolean(state.vote_feedback_visible) !== lastVoteFeedback) renderStudent();
     else if (state.stage === 1) updateVoteAvailability(state);
-    else if (state.stage === 2) updateForceReveal(state);
-    else if (state.stage === 3) updateDeformationReveal(state);
+    else if (view === "force") updateForceReveal(state);
+    else if (view === "deformation") updateDeformationReveal(state);
     else if (state.stage === 4) updateTransferAnswers(state);
     lastStage = state.stage;
-    lastA2VotePage = isA2VotePage(state);
+    lastViewHeat = view;
     lastVoteFeedback = Boolean(state.vote_feedback_visible);
   } catch (error) {
     sessionPill.textContent = "正在重连";

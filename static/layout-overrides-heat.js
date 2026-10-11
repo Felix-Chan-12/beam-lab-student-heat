@@ -1,7 +1,8 @@
-// BEAM LAB 版面调试保存的配置（由「版面调试」窗口自动生成，2026-10-11 09:24:50）
+// BEAM LAB 版面调试保存的配置（由「版面调试」窗口自动生成，2026-10-11 19:51:15）
 // 放在 static 文件夹里，teacher.html 和 student.html 会自动读取。
 // "wide" "medium" "narrow" 是教师版（按宽度分档），"phone" 是学生页的手机版面。
 // 想恢复默认版面：把 "regimes" 后面的内容改成 {}，或在版面调试里重置后再保存。
+// "pageMapHeat": 4 表示页号已按 2026-10-11 第三次调整后的步骤编排（A1-0～A1-5、A2-0～A2-4）；小于 4 或没有这一项的旧文件，打开时自动改到新页号。
 // "votes" 是 E 投票反馈页的人数（agree = A、doubt = B、unsure = C），在版面调试里选中「人数方块」可以改。
 // "transfer" 是 M 页「学生回答」：B、C 的人数（A = 第一次投票的总人数 − B − C）和每位同学的想法，在版面调试里选中 M 页右栏可以改。
 // "canvas" 是教师版各页画布的大小，手机照搬教师版时用；保存时自动量，不用改。
@@ -28,14 +29,6 @@ window.BEAM_LAYOUT_OVERRIDES = {
         1460,
         759.5
       ],
-      "A2-1": [
-        1460,
-        759.5
-      ],
-      "A2-2": [
-        1460,
-        759.5
-      ],
       "A2-3": [
         1460,
         759.5
@@ -43,14 +36,11 @@ window.BEAM_LAYOUT_OVERRIDES = {
       "A2-4": [
         1460,
         759.5
-      ],
-      "A2-5": [
-        1460,
-        759.5
       ]
     },
     "width": 1844
   },
+  "pageMapHeat": 4,
   "regimes": {
     "phone": {
       "A1-0": {
@@ -296,78 +286,7 @@ window.BEAM_LAYOUT_OVERRIDES = {
           "sel": "#app .force-free-canvas > [data-element-slot=\"originalStructure\"]"
         }
       },
-      "A2-0": {
-        "canvas": {
-          "kind": "canvas",
-          "label": "画布白框",
-          "props": {
-            "ar": 1.336
-          },
-          "sel": "#app .force-free-canvas"
-        },
-        "divider": {
-          "kind": "bar",
-          "label": "上下分隔线",
-          "props": {
-            "kh": 71.1628,
-            "kw": 95.3488,
-            "tvw": 34.2807
-          },
-          "sel": "#app .force-free-canvas > .deformation-row-divider"
-        },
-        "label:basicFyB": {
-          "kind": "label",
-          "label": "下方 FyB 数值",
-          "props": {
-            "dx": -24,
-            "dy": 12
-          },
-          "sel": "#app [data-force-label-slot=\"basicFyB\"]"
-        },
-        "label:originalFyB": {
-          "kind": "label",
-          "label": "上方 FyB 数值",
-          "props": {
-            "dx": -24,
-            "dy": 36
-          },
-          "sel": "#app [data-force-label-slot=\"originalFyB\"]"
-        },
-        "momentTitleBottom": {
-          "kind": "abstext",
-          "label": "下方「弯矩图」小标题",
-          "props": {
-            "kh": 9.0698,
-            "kw": 31.1628,
-            "lvw": -2.3585,
-            "tvw": 14.7823
-          },
-          "sel": "#app [data-element-slot=\"basicMomentBg\"] > .moment-diagram-title"
-        },
-        "momentTitleTop": {
-          "kind": "abstext",
-          "label": "上方「弯矩图」小标题",
-          "props": {
-            "kh": 11.8605,
-            "kw": 31.1628,
-            "lvw": -1.3226,
-            "tvw": 15.1671
-          },
-          "sel": "#app [data-element-slot=\"originalMomentBg\"] > .moment-diagram-title"
-        },
-        "slot:originalMomentBg": {
-          "kind": "abs",
-          "label": "08 上方弯矩图",
-          "props": {
-            "kh": 71.1628,
-            "kw": 95.3488,
-            "lvw": 5.0432,
-            "tvw": 4.3496
-          },
-          "sel": "#app .force-free-canvas > [data-element-slot=\"originalMomentBg\"]"
-        }
-      },
-      "A2-3": {
+      "A2-2": {
         "label:basicFyB": {
           "kind": "label",
           "label": "下方 FyB 数值",
@@ -378,7 +297,7 @@ window.BEAM_LAYOUT_OVERRIDES = {
           "sel": "#app [data-force-label-slot=\"basicFyB\"]"
         }
       },
-      "A2-4": {
+      "A2-3": {
         "formula": {
           "kind": "abstext",
           "label": "位移公式",
@@ -400,7 +319,7 @@ window.BEAM_LAYOUT_OVERRIDES = {
           "sel": "#app [data-force-label-slot=\"basicFyB\"]"
         }
       },
-      "A2-5": {
+      "A2-4": {
         "formula": {
           "kind": "abstext",
           "label": "位移公式",
@@ -811,56 +730,33 @@ window.BEAM_LAYOUT_OVERRIDES = {
             "tvw": 1.9616
           },
           "sel": "#app .force-free-canvas > [data-element-slot=\"originalStructure\"]"
-        }
-      },
-      "A2-0": {
-        "divider": {
-          "kind": "bar",
-          "label": "上下分隔线",
-          "props": {
-            "kh": 40.1302,
-            "kw": 79.0672,
-            "tvw": 18.8544
-          },
-          "sel": "#app .force-free-canvas > .deformation-row-divider"
         },
-        "slot:basicStructure": {
-          "kind": "abs",
-          "label": "07 基本体系图",
-          "props": {
-            "kh": 40.1302,
-            "kw": 79.0672,
-            "lvw": 39.5881,
-            "tvw": 25.6062,
-            "wvw": 32.321
-          },
-          "sel": "#app .force-free-canvas > [data-element-slot=\"basicStructure\"]"
+        "storyTitle": {
+          "kind": "text",
+          "label": "标题",
+          "props": {},
+          "sel": "#app .force-story > h1",
+          "text": "检查第一步：定基本结构"
         }
       },
-      "A2-1": {
-        "slot:basicMomentBg": {
-          "kind": "abs",
-          "label": "10 下方弯矩图",
+      "A1-4": {
+        "methodStripHeat": {
+          "kind": "box",
+          "label": "A1-4 顺序示意图",
           "props": {
-            "kh": 42.841,
-            "kw": 78.1551,
-            "lvw": 5.2636
+            "frameInterval": 0.35
           },
-          "sel": "#app .force-free-canvas > [data-element-slot=\"basicMomentBg\"]"
+          "sel": "#app [data-step-figure-heat=\"methodStrip\"]"
         },
-        "slot:basicStructure": {
-          "kind": "abs",
-          "label": "07 基本体系图",
-          "props": {
-            "kh": 42.841,
-            "kw": 78.1551,
-            "lvw": 47.6687,
-            "tvw": 24.4747
-          },
-          "sel": "#app .force-free-canvas > [data-element-slot=\"basicStructure\"]"
+        "storyTitle": {
+          "kind": "text",
+          "label": "标题",
+          "props": {},
+          "sel": "#app .force-story > h1",
+          "text": "检查第二步：列力法方程"
         }
       },
-      "A2-2": {
+      "A1-5": {
         "formula": {
           "kind": "abstext",
           "label": "位移公式",
@@ -872,6 +768,16 @@ window.BEAM_LAYOUT_OVERRIDES = {
             "tvw": 32.1863
           },
           "sel": "#app .force-free-canvas > .deformation-formula-label"
+        },
+        "fybFormulaHeat": {
+          "kind": "figureFormula",
+          "label": "绿色 FyB 位移公式",
+          "props": {
+            "formulaScale": 120,
+            "formulaX": 1138.5,
+            "formulaY": 519.7
+          },
+          "sel": "#app [data-figure-formula-heat=\"fyb\"]"
         },
         "slot:basicMomentBg": {
           "kind": "abs",
@@ -895,42 +801,7 @@ window.BEAM_LAYOUT_OVERRIDES = {
           "sel": "#app .force-free-canvas > [data-element-slot=\"basicStructure\"]"
         }
       },
-      "A2-3": {
-        "formula": {
-          "kind": "abstext",
-          "label": "位移公式",
-          "props": {
-            "kh": 40.1302,
-            "kw": 79.0672,
-            "lvw": 28.64,
-            "text": 200,
-            "tvw": 33.95
-          },
-          "sel": "#app .force-free-canvas > .deformation-formula-label"
-        },
-        "slot:basicMomentBg": {
-          "kind": "abs",
-          "label": "10 下方弯矩图",
-          "props": {
-            "kh": 42.841,
-            "kw": 78.1551,
-            "lvw": 5.2636
-          },
-          "sel": "#app .force-free-canvas > [data-element-slot=\"basicMomentBg\"]"
-        },
-        "slot:basicStructure": {
-          "kind": "abs",
-          "label": "07 基本体系图",
-          "props": {
-            "kh": 42.841,
-            "kw": 78.1551,
-            "lvw": 47.991,
-            "tvw": 22.4936
-          },
-          "sel": "#app .force-free-canvas > [data-element-slot=\"basicStructure\"]"
-        }
-      },
-      "A2-3-compareHeat": {
+      "A2-0": {
         "compareBottomStructureHeat": {
           "kind": "abs",
           "label": "对照·下排结构图（温度）",
@@ -952,7 +823,62 @@ window.BEAM_LAYOUT_OVERRIDES = {
           "sel": "#app .force-free-canvas > [data-compare-slot-heat=\"topStructure\"]"
         }
       },
-      "A2-4": {
+      "A2-2": {
+        "formula": {
+          "kind": "abstext",
+          "label": "位移公式",
+          "props": {
+            "kh": 40.1302,
+            "kw": 79.0672,
+            "lvw": 28.64,
+            "text": 200,
+            "tvw": 33.95
+          },
+          "sel": "#app .force-free-canvas > .deformation-formula-label"
+        },
+        "fybFormulaHeat": {
+          "kind": "figureFormula",
+          "label": "绿色 FyB 位移公式",
+          "props": {
+            "formulaScale": 120,
+            "formulaX": 1136.5,
+            "formulaY": 529.3
+          },
+          "sel": "#app [data-figure-formula-heat=\"fyb\"]"
+        },
+        "slot:basicMomentBg": {
+          "kind": "abs",
+          "label": "10 下方弯矩图",
+          "props": {
+            "kh": 42.841,
+            "kw": 78.1551,
+            "lvw": 5.2636
+          },
+          "sel": "#app .force-free-canvas > [data-element-slot=\"basicMomentBg\"]"
+        },
+        "slot:basicStructure": {
+          "kind": "abs",
+          "label": "07 基本体系图",
+          "props": {
+            "kh": 42.841,
+            "kw": 78.1551,
+            "lvw": 47.991,
+            "tvw": 22.4936
+          },
+          "sel": "#app .force-free-canvas > [data-element-slot=\"basicStructure\"]"
+        },
+        "thermalFormulaHeat": {
+          "kind": "figureFormula",
+          "label": "紫色温度位移公式",
+          "props": {
+            "formulaScale": 120,
+            "formulaX": 2954.3,
+            "formulaY": 535
+          },
+          "sel": "#app [data-figure-formula-heat=\"thermal\"]"
+        }
+      },
+      "A2-3": {
         "controlCard": {
           "kind": "panel",
           "label": "滑块卡片",
@@ -1003,7 +929,7 @@ window.BEAM_LAYOUT_OVERRIDES = {
           "sel": "#app .force-free-canvas > [data-element-slot=\"basicStructure\"]"
         }
       },
-      "A2-5": {
+      "A2-4": {
         "formula": {
           "kind": "abstext",
           "label": "位移公式",
@@ -1055,54 +981,6 @@ window.BEAM_LAYOUT_OVERRIDES = {
             "tvw": -0.7051
           },
           "sel": "#app .deformation-zero-label"
-        }
-      },
-      "A2-5-compareHeat": {
-        "compareBottomStructureHeat": {
-          "kind": "abs",
-          "label": "对照·下排结构图（温度）",
-          "props": {
-            "kh": 41.0521,
-            "kw": 79.0672,
-            "lvw": 31.1828,
-            "tvw": 25.2965,
-            "wvw": 26.7119
-          },
-          "sel": "#app .force-free-canvas > [data-compare-slot-heat=\"bottomStructure\"]"
-        },
-        "compareNoteBottomHeat": {
-          "kind": "abstext",
-          "label": "对照·下排说明 / 力法方程",
-          "props": {
-            "kh": 42.841,
-            "kw": 78.1551,
-            "lvw": 61.6304,
-            "tvw": 31.1523
-          },
-          "sel": "#app .force-free-canvas > [data-compare-note-heat=\"bottom\"]"
-        },
-        "compareNoteTopHeat": {
-          "kind": "abstext",
-          "label": "对照·上排说明 / 力法方程",
-          "props": {
-            "kh": 42.841,
-            "kw": 78.1551,
-            "lvw": 61.6304,
-            "tvw": 11.0618
-          },
-          "sel": "#app .force-free-canvas > [data-compare-note-heat=\"top\"]"
-        },
-        "compareTopStructureHeat": {
-          "kind": "abs",
-          "label": "对照·上排结构图（荷载）",
-          "props": {
-            "kh": 42.841,
-            "kw": 78.1551,
-            "lvw": 31.3464,
-            "tvw": 6.1378,
-            "wvw": 26.7685
-          },
-          "sel": "#app .force-free-canvas > [data-compare-slot-heat=\"topStructure\"]"
         }
       },
       "ALL": {
@@ -1763,7 +1641,7 @@ window.BEAM_LAYOUT_OVERRIDES = {
       }
     }
   },
-  "savedAt": "2026-10-11 09:24:50",
+  "savedAt": "2026-10-11 19:51:15",
   "transfer": {
     "B": 0,
     "C": 5,

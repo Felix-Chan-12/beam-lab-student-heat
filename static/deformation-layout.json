@@ -336,26 +336,6 @@
         "bottomMoment": "/assets/force-story/scene/10.png",
         "bottomStructure": "/assets/force-story/uploads/d2_bottomStructure-heat.png"
       }
-    },
-    "5": {
-      "elements": {
-        "topMoment": { "x": 20.0, "y": 170.0, "scale": 1.25 },
-        "topStructure": { "x": 470.0, "y": 70.0, "scale": 1.0 },
-        "bottomMoment": { "x": 20.0, "y": 640.0, "scale": 1.25 },
-        "bottomStructure": { "x": 470.0, "y": 540.0, "scale": 1.0 }
-      },
-      "labels": {
-        "topMA": { "x": 1.0, "y": 3.0, "scale": 1.0 },
-        "bottomMA": { "x": 1.0, "y": 3.0, "scale": 1.0 },
-        "topFyB": { "x": 58.0, "y": 80.0, "scale": 1.0 },
-        "bottomFyB": { "x": 58.0, "y": 80.0, "scale": 1.0 }
-      },
-      "assets": {
-        "topMoment": "/assets/force-story/scene/10.png",
-        "topStructure": "/assets/force-story/uploads/d4_bottomStructure.png",
-        "bottomMoment": "/assets/force-story/scene/10.png",
-        "bottomStructure": "/assets/force-story/uploads/d4_bottomStructure-heat.png"
-      }
     }
   }
 }

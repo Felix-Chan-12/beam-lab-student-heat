@@ -10,7 +10,7 @@
  *   student.html          学生页：套用保存的版面。手机上（宽度 <700px）先继承教师版宽屏档的画布排布，再套用手机版面。
  *   student-edit.html     （或 student.html?edit=1）在电脑上按手机尺寸调 student.html 的手机版面。
  *
- * 页面内容的调整按「页」保存（00 等待、01 E、01 E 反馈、A1-0…A1-3、A2-0…A2-5、04 M），可选「只改本页 / 本阶段通用 /
+ * 页面内容的调整按「页」保存（00 等待、01 E、01 E 反馈、A1-0…A1-5、A2-0…A2-4、04 M），可选「只改本页 / 同组通用 /
  * 所有页通用」；并按宽度分档（宽屏 ≥1300px、中屏 1000–1299px、窄屏 700–999px；手机 <700px 只对 student.html）。
  */
 (function () {
@@ -72,8 +72,11 @@
   // 手机自己的调整（student-edit.html 里调的，存在 "phone" 档）不再使用，文件里保留不删；student-edit.html 只用来预览。
   // 需要教师版各页画布的大小：保存时自动量，存在配置文件的 canvas 里。
   const PHONE_AUTO = true;
-  const REPLICA_KINDS = new Set(["abs", "abstext", "arrow", "bar", "label"]); // 画布里的元素：教师版的调整全部照搬
-  const CANVAS_PAGE = /^A[12]-\d$/; // 有画布的页
+  const REPLICA_KINDS = new Set(["abs", "abstext", "arrow", "bar", "label", "figureFormula"]); // 画布里的元素：教师版的调整全部照搬
+  const CANVAS_PAGE = /^A[12]-\d$/; // A1、A2 各页
+  // heat：A1-4、A1-5、A2-1、A2-2 使用整图，画布收起，不量也不照搬。
+  const FIGURE_PAGES_HEAT = new Set(["A1-4", "A1-5", "A2-1", "A2-2"]);
+  const isCanvasPage = (key) => CANVAS_PAGE.test(String(key)) && !FIGURE_PAGES_HEAT.has(String(key)); // 有画布的页
   const PHONE_DEVICES = [
     { key: "iphone15", label: "iPhone 14 / 15（390×844）", w: 390, h: 844 },
     { key: "iphoneSE", label: "iPhone SE（375×667）", w: 375, h: 667 },
@@ -89,21 +92,21 @@
     ["A1-1", "02 A1-1 切开竖向链杆"],
     ["A1-2", "02 A1-2 用力保留链杆作用"],
     ["A1-3", "02 A1-3 比较切开前后内力图"],
-    ["A2-0", "03 A2-0 切开时拿走了什么"],
-    ["A2-1", "03 A2-1 FyB 单独作用"],
-    ["A2-2", "03 A2-2 FyB 引起的位移"],
-    ["A2-3", "03 A2-3 温度单独作用"],
-    ["A2-3-compareHeat", "03 A2-3 荷载／温度对照"],
-    ["A2-4", "03 A2-4 叠加 · AI 辅助计算"],
-    ["A2-5", "03 A2-5 B 点位移表达式"],
-    ["A2-5-compareHeat", "03 A2-5 荷载／温度对照"],
+    ["A1-4", "02 A1-4 力法方程：位移协调"],
+    ["A1-5", "02 A1-5 FyB 引起的位移"],
+    ["A2-0", "03 A2-0 荷载／温度对照"],
+    ["A2-1", "03 A2-1 弯曲变形的两个来源"],
+    ["A2-2", "03 A2-2 温度单独作用"],
+    ["A2-3", "03 A2-3 叠加 · AI 辅助计算"],
+    ["A2-4", "03 A2-4 B 点位移表达式"],
     ["M", "04 M 迁移拓展"],
   ];
-  const PHONE_PAGES = PAGES.filter(([key]) => key !== "WAIT" && !key.endsWith("-compareHeat")); // 学生页没有「等待」页；对照视图只在教师端（heat）
-  // 「本阶段通用」的分组：E（投票、反馈两页）、A1（四步）、A2（六步）。
-  const GROUPS = { E: "01 E 两页", A1: "02 A1 四步", A2: "03 A2 六步" };
-  const groupOf = (pageKey) => (pageKey === "E" || pageKey === "E-FB" ? "E" : /^A1-/.test(pageKey) ? "A1" : /^A2-/.test(pageKey) ? "A2" : "");
-  // 同一元素在几个范围里都有调整时：本页 > 本阶段 > 所有页（控制台：当前视图 > 两种视图通用）。
+  const PHONE_PAGES = PAGES.filter(([key]) => key !== "WAIT"); // 学生页没有「等待」页
+  // 「同组通用」的分组：E（投票、反馈两页）；A1-0～A1-4（受力图）；A1-5～A2-4（变形图）。
+  // 组名沿用 A1、A2（文件里的 G:A1、G:A2），原来按组调的版面仍然落在同一套画面上。
+  const GROUPS = { E: "01 E 两页", A1: "A1-0～A1-4 受力图", A2: "A1-5～A2-4 变形图" };
+  const groupOf = (pageKey) => (pageKey === "E" || pageKey === "E-FB" ? "E" : /^A1-[0-4]$/.test(pageKey) ? "A1" : /^A1-5$|^A2-/.test(pageKey) ? "A2" : "");
+  // 同一元素在几个范围里都有调整时：本页 > 同组 > 所有页（控制台：当前视图 > 两种视图通用）。
   const bucketRank = (key) => (key === "ALL" || key === "CONSOLE" ? 0 : key.startsWith("G:") ? 1 : 2);
 
   const PROPS = {
@@ -124,6 +127,10 @@
     gap: { label: "内部间距", unit: "px", min: 0, max: 300, step: 1, digits: 0 },
     order: { label: "排列顺序", unit: "", min: -5, max: 5, step: 1, digits: 0 },
     text: { label: "文字大小", unit: "%", min: 30, max: 300, step: 1, digits: 0 },
+    formulaX: { label: "图内 X 坐标", unit: "px", min: -1000, max: 6200, step: 1, digits: 1 },
+    formulaY: { label: "图内 Y 坐标", unit: "px", min: -500, max: 2200, step: 1, digits: 1 },
+    formulaScale: { label: "公式大小", unit: "%", min: 10, max: 400, step: 1, digits: 1 },
+    frameInterval: { label: "每张显示时间", unit: "秒", min: 0.05, max: 10, step: 0.05, digits: 2 },
     ar: { label: "宽高比", unit: "", min: 0.5, max: 6, step: 0.001, digits: 3 },
     colR: { label: "右栏宽度", unit: "px", min: 120, max: 900, step: 1, digits: 0 },
     heroL: { label: "左栏占比", unit: "%", min: 15, max: 85, step: 0.5, digits: 1 },
@@ -167,6 +174,7 @@
     circle: ["x", "y", "size", "mt", "mb", "order", "text"],
     fpanel: ["hpx"],
     guard: ["gsize"],
+    figureFormula: ["formulaX", "formulaY", "formulaScale"],
   };
   // 画布里（绝对定位）的元素：坐标、宽高存成相对画布的 vw；其他元素的坐标存成相对原位置的移动量（dx、dy）。
   const CANVAS_KINDS = new Set(["abs", "abstext", "arrow", "bar"]);
@@ -178,6 +186,8 @@
     arrow: ["left", "top", "h"],
     bar: ["left", "top", "width"],
     label: ["text"],
+    figureFormula: ["formulaX", "formulaY", "formulaScale"],
+    box: ["frameInterval"],
   };
 
   // 拖动手柄对应的尺寸属性：w 宽、h 高、both 等宽高、scale 按比例缩放文字。
@@ -199,20 +209,22 @@
     circle: { both: "size" },
     fpanel: { h: "hpx" },
     guard: { both: "gsize" },
+    figureFormula: { scale: "formulaScale" },
   };
 
   const KIND_TIPS = {
     main: "整块内容的位置、宽度、高度和上下留白。四条边都可以拖：拖哪一边，哪一边动，对边不动。设了高度后，里面的内容跟着填满（E 页两栏变高；A1、A2 页画布变高或变矮）。最矮只到里面的内容放得下为止，再往小就停住。",
     canvas: "拖右下角同时改宽和高；宽高比越大，画布越扁。「文字大小」会一起缩放画布里的全部文字。",
-    abs: "图片高度按比例自动变化。设成「本阶段 / 所有页通用」后，各页的这张图在同一坐标、同样大小。",
-    abstext: "设成「本阶段 / 所有页通用」后，各页的这段文字在同一坐标。",
+    abs: "图片高度按比例自动变化。设成「同组 / 所有页通用」后，各页的这张图在同一坐标、同样大小。",
+    abstext: "设成「同组 / 所有页通用」后，各页的这段文字在同一坐标。",
     label: "位置由程序跟着数值自动计算，这里调的是在自动位置上的偏移；拖右下角可以放大缩小。",
-    arrow: "设成「本阶段 / 所有页通用」后，各页的箭头在同一坐标。",
-    bar: "设成「本阶段 / 所有页通用」后，各页的分隔线在同一坐标。",
+    arrow: "设成「同组 / 所有页通用」后，各页的箭头在同一坐标。",
+    bar: "设成「同组 / 所有页通用」后，各页的分隔线在同一坐标。",
     hero: "左栏占比决定左右两栏的宽度分配。",
     comp: "右栏宽度只在显示右侧控制栏的页面有效。",
     fpanel: "银色面板的高度（拖下边也行）。屏幕跟着变矮或变高，整个外框始终正好一屏。",
     guard: "两个护角一起调大小（拖右下角 ◢ 也行）；阶段名和右边的按钮会跟着让开。",
+    figureFormula: "坐标原点是图片左上角，单位为原图 px；图片缩放时公式跟着一起缩放。拖公式或 ✥ 移动，拖右下角 ◢ 调整公式大小。",
   };
 
   const FORCE_SLOTS = [
@@ -280,7 +292,7 @@
     { key: "trendLabel", label: "「变形趋势示意」", sel: "#app .deformation-trend-label", kind: "abstext" },
     { key: "zeroLabel", label: "「ΔB = 0」", sel: "#app .deformation-zero-label", kind: "abstext" },
     { key: "endpointLabel", label: "端点「ΔB」标注", sel: "#app .endpoint-label", kind: "label" },
-    // heat：「荷载／温度对照」视图（A2-3、A2-5 打开对照时才出现）
+    // heat：「荷载／温度对照」（A2-0）
     { key: "compareTopMomentHeat", label: "对照·上排弯矩图（荷载）", sel: '#app .force-free-canvas > [data-compare-slot-heat="topMoment"]', kind: "abs" },
     { key: "compareTopStructureHeat", label: "对照·上排结构图（荷载）", sel: '#app .force-free-canvas > [data-compare-slot-heat="topStructure"]', kind: "abs" },
     { key: "compareBottomMomentHeat", label: "对照·下排弯矩图（温度）", sel: '#app .force-free-canvas > [data-compare-slot-heat="bottomMoment"]', kind: "abs" },
@@ -289,12 +301,19 @@
     { key: "compareMomentTitleBottomHeat", label: "对照·下排「弯矩图」小标题", sel: '#app [data-compare-slot-heat="bottomMoment"] > .moment-diagram-title', kind: "abstext" },
     { key: "compareCaptionTopHeat", label: "对照·上排图注「荷载作用」", sel: '#app .force-free-canvas > [data-compare-caption-heat="top"]', kind: "abstext" },
     { key: "compareCaptionBottomHeat", label: "对照·下排图注「温度作用」", sel: '#app .force-free-canvas > [data-compare-caption-heat="bottom"]', kind: "abstext" },
-    { key: "compareNoteTopHeat", label: "对照·上排说明 / 力法方程", sel: '#app .force-free-canvas > [data-compare-note-heat="top"]', kind: "abstext" },
-    { key: "compareNoteBottomHeat", label: "对照·下排说明 / 力法方程", sel: '#app .force-free-canvas > [data-compare-note-heat="bottom"]', kind: "abstext" },
+    { key: "compareNoteTopHeat", label: "对照·上排说明", sel: '#app .force-free-canvas > [data-compare-note-heat="top"]', kind: "abstext" },
+    { key: "compareNoteBottomHeat", label: "对照·下排说明", sel: '#app .force-free-canvas > [data-compare-note-heat="bottom"]', kind: "abstext" },
     { key: "compareLabelTopMAHeat", label: "对照·上排 MA 数值", sel: '#app [data-compare-label-heat="topMA"]', kind: "label" },
     { key: "compareLabelBottomMAHeat", label: "对照·下排 MA 数值", sel: '#app [data-compare-label-heat="bottomMA"]', kind: "label" },
-    { key: "compareLabelTopFyBHeat", label: "对照·上排 FyB 数值", sel: '#app [data-compare-label-heat="topFyB"]', kind: "label" },
-    { key: "compareLabelBottomFyBHeat", label: "对照·下排 FyB 数值", sel: '#app [data-compare-label-heat="bottomFyB"]', kind: "label" },
+    // heat：A1-1～A1-5 右侧「力法步骤」框，以及各页整图
+    { key: "methodStepsHeat", label: "「力法步骤」框", sel: "#app .method-steps-heat", kind: "box" },
+    { key: "methodStepsTitleHeat", label: "「力法步骤」标题", sel: "#app .method-steps-heat > h2", kind: "text" },
+    { key: "methodStripHeat", label: "A1-4 顺序示意图", sel: '#app [data-step-figure-heat="methodStrip"]', kind: "box" },
+    { key: "fybDisplacementHeat", label: "A1-5 FyB 位移图", sel: '#app [data-step-figure-heat="fybDisplacement"]', kind: "box" },
+    { key: "bendSourcesHeat", label: "A2-1 弯曲变形的两个来源", sel: '#app [data-step-figure-heat="bendSources"]', kind: "box" },
+    { key: "thermalDisplacementHeat", label: "A2-2 温度位移图", sel: '#app [data-step-figure-heat="thermalDisplacement"]', kind: "box" },
+    { key: "fybFormulaHeat", label: "绿色 FyB 位移公式", sel: '#app [data-figure-formula-heat="fyb"]', kind: "figureFormula" },
+    { key: "thermalFormulaHeat", label: "紫色温度位移公式", sel: '#app [data-figure-formula-heat="thermal"]', kind: "figureFormula" },
     { key: "tfStory", label: "M：整块面板", sel: "#app > .transfer-story", kind: "panel" },
     { key: "tfHead", label: "M：题目区", sel: "#app .transfer-head", kind: "group" },
     { key: "tfTitle", label: "M：题目", sel: "#app .transfer-head h1", kind: "text" },
@@ -321,9 +340,9 @@
     { key: "readoutBoxes", label: "读数方块（全部）", sel: "#app .force-control .readout", kind: "box" },
     { key: "hint", label: "提示文字", sel: "#app .force-control .hint", kind: "text" },
   ];
-  // 默认应用范围：各页都有的「外框、标题、右侧控制栏」默认所有页通用；E 阶段的两栏默认 E 两页通用；
-  // 画布里的图和标注各页排布不同，默认只改本页。选中元素后可以随时改。
-  const ALL_SCOPE_KEYS = new Set(["main", "story", "storyTitle", "composition", "controls", "controlCard", "aiCard", "rangeRow", "specials", "readouts", "readoutBoxes", "hint"]);
+  // 默认应用范围：各页都有的「外框、标题、右侧控制栏」默认所有页通用；「力法步骤」框（A1-1～A1-5，跨受力图、变形图两组）
+  // 也默认所有页通用；E 阶段的两栏默认 E 两页通用；画布里的图和标注各页排布不同，默认只改本页。选中元素后可以随时改。
+  const ALL_SCOPE_KEYS = new Set(["main", "story", "storyTitle", "composition", "controls", "controlCard", "aiCard", "rangeRow", "specials", "readouts", "readoutBoxes", "hint", "methodStepsHeat", "methodStepsTitleHeat"]);
   const GROUP_SCOPE_KEYS = new Set(["hero", "leftPanel", "leftTitle", "options", "optionAll", "submitRow", "voteInput", "voteSubmit", "fbSummary", "fbTotal", "fbBars", "fbComments", "rightPanel", "rightTitle", "rightSubtitle", "rightLead", "equations", "candidates", "candidateRows", "symbolNotes"]);
   PAGE_REGISTRY.forEach((def) => { def.scope = ALL_SCOPE_KEYS.has(def.key) ? "all" : GROUP_SCOPE_KEYS.has(def.key) ? "group" : "page"; });
 
@@ -370,7 +389,6 @@
     { key: "c:hideAnswers", label: "「收起回答」", sel: "#hideAnswers", kind: "box", shared: true },
     { key: "c:revealGrid", label: "进度格", sel: "#forceRevealGrid", kind: "group", shared: true },
     { key: "c:revealReset", label: "「重置呈现」", sel: "#forceRevealReset", kind: "box", shared: true },
-    { key: "c:compareHeat", label: "「荷载／温度对照」", sel: "#toggleCompareHeat", kind: "box", shared: true },
     { key: "c:focusBtn", label: "「放大学生预览 / 返回控制台」", sel: "#focusPreview", kind: "box", shared: true },
     { key: "c:tuneBtn", label: "「版面调试」按钮", sel: "#openLayoutEditor", kind: "box", shared: true },
     { key: "c:roadmap", label: "阶段路线（00–04）", sel: "#teacherCockpit > .stage-roadmap", kind: "group" },
@@ -394,12 +412,13 @@
     "#teacherStageTitle", "#nextStage", "#focusPreview", "#forceRevealNext", "#sessionPill", ".url",
     ".student-feedback-comments", '[data-self-nav="next"]',
     ".transfer-text", ".transfer-count", ".transfer-waiting", "#submitTransfer",
-    "[data-compare-label-heat]", "#toggleCompareHeat",
+    "[data-compare-label-heat]",
+    "[data-figure-formula-heat]",
   ].join(",");
   const INTERACTIVE_SEL = "button, input, select, textarea, a, iframe, [data-vote]";
 
-  const ANCHOR_ATTRS = ["data-element-slot", "data-force-label-slot", "data-vote", "data-special-candidate", "data-force-channel", "data-force-reveal-step", "data-stage", "data-self-nav", "data-self-stage", "data-self-step", "data-transfer-choice", "data-transfer-card", "data-compare-slot-heat", "data-compare-label-heat", "data-compare-note-heat", "data-compare-caption-heat"];
-  const FLAG_ATTRS = ["data-force-top-caption", "data-force-bottom-caption", "data-structure-caption", "data-deformation-divider", "data-force-transition-arrow", "data-force-compare-decoration", "data-force-readouts", "data-special-candidates", "data-ai-deformation-card", "data-ai-deformation-button", "data-ai-deformation-status", "data-deformation-formula", "data-deformation-trend-label", "data-deformation-zero-label", "data-force-value", "data-force-slider"];
+  const ANCHOR_ATTRS = ["data-element-slot", "data-force-label-slot", "data-vote", "data-special-candidate", "data-force-channel", "data-force-reveal-step", "data-stage", "data-self-nav", "data-self-stage", "data-self-step", "data-transfer-choice", "data-transfer-card", "data-compare-slot-heat", "data-compare-label-heat", "data-compare-note-heat", "data-compare-caption-heat", "data-step-figure-heat", "data-method-step-heat"];
+  const FLAG_ATTRS = ["data-force-top-caption", "data-force-bottom-caption", "data-structure-caption", "data-deformation-divider", "data-force-transition-arrow", "data-force-compare-decoration", "data-force-readouts", "data-special-candidates", "data-ai-deformation-card", "data-ai-deformation-button", "data-ai-deformation-status", "data-deformation-formula", "data-deformation-trend-label", "data-deformation-zero-label", "data-force-value", "data-force-slider", "data-method-steps-heat"];
   const SKIP_CLASS = /^(selected|active|current|show|closed|collapsed|math-variable|zero|preview-focus)$/;
   const INLINE_TAGS = new Set(["I", "B", "EM", "SUB", "SUP", "BR"]);
 
@@ -429,7 +448,51 @@
   }
 
   /* ---------- 数据 ---------- */
-  function emptyData() { return { version: 3, regimes: {} }; }
+  // heat：按旧页号保存的调整（文件里或浏览器草稿里）读进来时自动改到新页号：
+  //   第 1 次（pageMapHeat 1 → 2）：A1 加了 A1-4；A2 去掉原 A2-0，对照单独成 A2-2，加了 A2-3。
+  //   第 2 次（pageMapHeat 2 → 3）：原 A2-0、A2-1 并进 A1（A1-5、A1-6），其余 A2 往前挪两个（A2-0～A2-4）。
+  //   第 3 次（pageMapHeat 3 → 4）：删除原 A1-5，原 A1-6 的调整保留到新 A1-5。
+  // 没有 pageMapHeat 的算第 1 版。已经是 4 的不再改。
+  const PAGE_MAP_HEAT = 4;
+  const PAGE_RENAMES_HEAT = {
+    2: {
+      "A2-0": null, "A2-1": "A2-0", "A2-2": "A2-1", "A2-3-compareHeat": "A2-2",
+      "A2-3": "A2-4", "A2-4": "A2-5", "A2-5": "A2-6", "A2-5-compareHeat": null,
+    },
+    3: { "A2-0": "A1-5", "A2-1": "A1-6", "A2-2": "A2-0", "A2-3": "A2-1", "A2-4": "A2-2", "A2-5": "A2-3", "A2-6": "A2-4" },
+    4: { "A1-5": null, "A1-6": "A1-5" },
+  };
+  function migratePageKeysHeat(raw) {
+    if (!raw || typeof raw !== "object") return raw;
+    const from = Number(raw.pageMapHeat) || 1;
+    if (from >= PAGE_MAP_HEAT) return raw;
+    const out = clone(raw);
+    for (let to = from + 1; to <= PAGE_MAP_HEAT; to++) {
+      const map = PAGE_RENAMES_HEAT[to];
+      const rename = (pages) => {
+        const next = {};
+        for (const [key, value] of Object.entries(pages)) {
+          if (!Object.prototype.hasOwnProperty.call(map, key)) next[key] = value;
+          else if (map[key]) next[map[key]] = value;
+        }
+        return next;
+      };
+      if (out.regimes && typeof out.regimes === "object") {
+        for (const regimeKey of Object.keys(out.regimes)) {
+          if (out.regimes[regimeKey] && typeof out.regimes[regimeKey] === "object") out.regimes[regimeKey] = rename(out.regimes[regimeKey]);
+        }
+      }
+      if (out.canvas && out.canvas.pages && typeof out.canvas.pages === "object") {
+        const old = out.canvas.pages;
+        out.canvas.pages = rename(old);
+        // 第 1 次：原 A2-3 的画布同时给 A2-2（对照）和 A2-4
+        if (to === 2 && old["A2-3"] && !out.canvas.pages["A2-2"]) out.canvas.pages["A2-2"] = old["A2-3"];
+      }
+    }
+    out.pageMapHeat = PAGE_MAP_HEAT;
+    return out;
+  }
+  function emptyData() { return { version: 3, regimes: {}, pageMapHeat: PAGE_MAP_HEAT }; }
   function entryHasContent(entry) {
     return Boolean(entry && ((entry.props && Object.keys(entry.props).length) || typeof entry.text === "string" || entry.img));
   }
@@ -490,7 +553,7 @@
     if (!raw || typeof raw !== "object" || !(Number(raw.width) > 0) || !raw.pages || typeof raw.pages !== "object") return null;
     const pages = {};
     for (const [key, size] of Object.entries(raw.pages)) {
-      if (!CANVAS_PAGE.test(key) || !Array.isArray(size)) continue;
+      if (!isCanvasPage(key) || !Array.isArray(size)) continue;
       const w = Number(size[0]);
       const h = Number(size[1]);
       if (w > 0 && h > 0) pages[key] = [round(w, 1), round(h, 1)];
@@ -498,6 +561,7 @@
     return Object.keys(pages).length ? { width: round(Number(raw.width), 1), pages } : null;
   }
   function normalize(raw) {
+    raw = migratePageKeysHeat(raw); // heat：旧页号 → 新页号
     const out = emptyData();
     const votes = normVotes(raw && raw.votes);
     if (votes) out.votes = votes;
@@ -543,8 +607,8 @@
   const BASE_TEXT = readBaseText();
 
   /* ---------- 生成覆盖样式 ---------- */
-  // 作用范围：本页 [data-beam-page]、本阶段 [data-beam-group]、所有页 [data-beam-view="page"]、控制台两种视图 [data-beam-console]。
-  // 这几种写法的优先级（specificity）相同，生成时按「所有页 → 本阶段 → 本页」的顺序排列，后面的覆盖前面的。
+  // 作用范围：本页 [data-beam-page]、同组 [data-beam-group]、所有页 [data-beam-view="page"]、控制台两种视图 [data-beam-console]。
+  // 这几种写法的优先级（specificity）相同，生成时按「所有页 → 同组 → 本页」的顺序排列，后面的覆盖前面的。
   function scopeFor(bucketKey, regimeKey) {
     const base = regimeKey === "phone" ? "html body.self-guided-page" : "html body";
     if (bucketKey === "CONSOLE") return `${base}[data-beam-console]`;
@@ -608,6 +672,10 @@
     if (p.heroL != null) d.push(`grid-template-columns: minmax(0, ${p.heroL}fr) minmax(0, ${round(100 - p.heroL, 2)}fr)${I}`);
     if (p.minH != null) d.push(`min-height: ${p.minH}px${I}`);
     if (p.gsize != null) d.push(`--fr-guard-b: ${p.gsize}px${I}`);
+    if (p.formulaX != null) d.push(`--heat-formula-x: ${p.formulaX}px${I}`);
+    if (p.formulaY != null) d.push(`--heat-formula-y: ${p.formulaY}px${I}`);
+    if (p.formulaScale != null) d.push(`--heat-formula-scale: ${round(p.formulaScale / 100, 4)}${I}`);
+    if (p.frameInterval != null) d.push(`--heat-frame-interval: ${p.frameInterval}${I}`);
     if (entry.img && entry.ratioVar && entry.imgRatio) d.push(`--element-ratio: ${round(entry.imgRatio, 5)}${I}`);
     return d.join("; ");
   }
@@ -678,12 +746,12 @@
     return phoneBase;
   }
   // 手机照搬教师版：画布按教师版的大小排版（宽、宽高比、字号都和投屏一样），再整块缩到手机宽度（zoom，见 fitReplicaCanvas）。
-  // 某页没量到时，借同一部分（A1 / A2）量到的页。
+  // 某页没量到时，借同一组（受力图 / 变形图）量到的页。
   function replicaSize(data, key) {
-    if (!PHONE_AUTO || !data || !data.canvas || !CANVAS_PAGE.test(String(key))) return null;
+    if (!PHONE_AUTO || !data || !data.canvas || !isCanvasPage(key)) return null;
     const sizes = data.canvas.pages;
     const known = Object.keys(sizes);
-    return sizes[key] || sizes[known.find((k) => k.slice(0, 2) === key.slice(0, 2))] || sizes[known[0]] || null;
+    return sizes[key] || sizes[known.find((k) => groupOf(k) === groupOf(key))] || sizes[known[0]] || null;
   }
   // 量过教师版画布（在教师版保存过一次）才照搬；还没量过时，手机保持原来的样子（用手机自己的调整）。
   function phoneAuto(data) {
@@ -732,7 +800,7 @@
     }
     return parts.join("\n");
   }
-  // 同一档里：所有页 → 本阶段 → 本页（控制台：两种视图 → 当前视图），后写的覆盖先写的。
+  // 同一档里：所有页 → 同组 → 本页（控制台：两种视图 → 当前视图），后写的覆盖先写的。
   function orderedBuckets(pages) {
     return Object.keys(pages).map((key, index) => [key, index])
       .sort((a, b) => bucketRank(a[0]) - bucketRank(b[0]) || a[1] - b[1]).map(([key]) => key);
@@ -760,7 +828,7 @@
           const scope = scopeFor(bucketKey, regimeKey);
           for (const [entryKey, entry] of Object.entries(pages[bucketKey])) {
             const body = !inherit ? declarations(entry)
-              : replica ? (REPLICA_KINDS.has(entry.kind) || entry.kind === "canvas" ? replicaDeclarations(entry, replica) : "")
+              : replica ? (REPLICA_KINDS.has(entry.kind) || entry.kind === "canvas" ? replicaDeclarations(entry, replica) : declarations(entry, ["frameInterval"]))
               : declarations(Object.assign({}, entry, { props: inheritedProps(entry) }));
             // :where() 不增加优先级，保持「两种视图 → 当前视图」的先后关系。
             const layoutScope = isConsoleKey(bucketKey) && FRAME_OWNED.has(entryKey) ? `${scope}:where(:not(.beam-frame))` : scope;
@@ -807,13 +875,11 @@
     const stage = Number(state.stage || 0);
     if (stage === 0) return "WAIT";
     if (stage === 1) return state.vote_feedback_visible ? "E-FB" : "E";
-    if (stage === 2) return `A1-${Math.max(0, Math.min(3, Number(state.force_reveal_step || 0)))}`;
-    // A2-6（只在教师端）的页面框里是 01 阶段的投票页：用 E 投票页的版面（在 E 页调的，A2-6 跟着变）。
+    if (stage === 2) return `A1-${Math.max(0, Math.min(5, Number(state.force_reveal_step || 0)))}`;
+    // A2-5（只在教师端）的页面框里是 01 阶段的投票页：用 E 投票页的版面（在 E 页调的，A2-5 跟着变）。
     if (stage === 3) {
-      if (Number(state.deformation_reveal_step || 0) === 6) return "E";
-      const a2KeyHeat = `A2-${Math.max(0, Math.min(5, Number(state.deformation_reveal_step || 0)))}`;
-      // heat：A2-3、A2-5 打开「荷载／温度对照」时是单独的一页（对照视图只在教师端：控制台和它的预览）
-      return (isConsole || isPreview) && state.compare_open_heat && (a2KeyHeat === "A2-3" || a2KeyHeat === "A2-5") ? `${a2KeyHeat}-compareHeat` : a2KeyHeat;
+      if (Number(state.deformation_reveal_step || 0) === 5) return "E";
+      return `A2-${Math.max(0, Math.min(4, Number(state.deformation_reveal_step || 0)))}`;
     }
     if (stage === 4) return "M";
     return "";
@@ -912,6 +978,7 @@
       + "// 放在 static 文件夹里，teacher.html 和 student.html 会自动读取。\n"
       + '// "wide" "medium" "narrow" 是教师版（按宽度分档），"phone" 是学生页的手机版面。\n'
       + '// 想恢复默认版面：把 "regimes" 后面的内容改成 {}，或在版面调试里重置后再保存。\n'
+      + '// "pageMapHeat": 4 表示页号已按 2026-10-11 第三次调整后的步骤编排（A1-0～A1-5、A2-0～A2-4）；小于 4 或没有这一项的旧文件，打开时自动改到新页号。\n'
       + (data.votes ? '// "votes" 是 E 投票反馈页的人数（agree = A、doubt = B、unsure = C），在版面调试里选中「人数方块」可以改。\n' : "")
       + (data.transfer ? '// "transfer" 是 M 页「学生回答」：B、C 的人数（A = 第一次投票的总人数 − B − C）和每位同学的想法，在版面调试里选中 M 页右栏可以改。\n' : "")
       + (data.canvas ? '// "canvas" 是教师版各页画布的大小，手机照搬教师版时用；保存时自动量，不用改。\n' : "")
@@ -1239,7 +1306,7 @@
       return regimeKey === "phone" ? null : regimeKey;
     }
 
-    /* 数据读写：同一元素可以存在「本页 / 本阶段 / 所有页」（控制台：「当前视图 / 两种视图」）几个位置 */
+    /* 数据读写：同一元素可以存在「本页 / 同组 / 所有页」（控制台：「当前视图 / 两种视图」）几个位置 */
     const pageKey = () => currentKey();
     const LEVEL_ORDER = ctx.kind === "console" ? ["view", "shared"] : ["page", "group", "all"]; // 从小范围到大范围
     function levelKey(level, key = pageKey()) {
@@ -1252,17 +1319,17 @@
     const levels = () => LEVEL_ORDER.filter((level) => levelKey(level));
     function levelLabel(level) {
       if (level === "page") return "只改本页";
-      if (level === "group") return `本阶段通用（${GROUPS[groupOf(pageKey())] || ""}）`;
+      if (level === "group") return `同组通用（${GROUPS[groupOf(pageKey())] || ""}）`;
       if (level === "all") return "所有页通用";
       if (level === "view") return consoleFocus() ? "只在放大预览" : "只在普通视图";
       if (level === "shared") return "两种视图通用";
       return level;
     }
-    const levelShort = (level) => ({ page: "本页", group: "本阶段", all: "所有页", view: "当前视图", shared: "两种视图" }[level] || "");
+    const levelShort = (level) => ({ page: "本页", group: "同组", all: "所有页", view: "当前视图", shared: "两种视图" }[level] || "");
     function levelHint(level) {
       if (level === "page") return "只改这一页。";
-      if (level === "group") return "本阶段各页里的这个元素一起改；某页单独调过的，以那一页为准。";
-      if (level === "all") return "所有页里的这个元素一起改；某页或某阶段单独调过的，以它为准。";
+      if (level === "group") return "同组各页里的这个元素一起改；某页单独调过的，以那一页为准。";
+      if (level === "all") return "所有页里的这个元素一起改；某页或某组单独调过的，以它为准。";
       if (level === "view") return consoleFocus() ? "只在「放大学生预览」时生效。" : "只在普通视图生效。";
       if (level === "shared") return "普通视图和放大预览里都生效。";
       return "";
@@ -1399,6 +1466,7 @@
     function clearMoreSpecific(def, level, fn) { moreSpecific(level).forEach((l) => { const entry = entryAt(def, l); if (entry) fn(entry); }); }
     function setProp(def, prop, value, options = {}) {
       if (!Number.isFinite(value)) return;
+      if (prop === "frameInterval" || prop === "formulaScale") value = Math.min(PROPS[prop].max, Math.max(PROPS[prop].min, value));
       if (VOTE_PROPS[prop]) { setVote(prop, value, options); return; }
       if (TRANSFER_PROPS[prop]) { setTransferCount(prop, value, options); return; }
       if (PROPS[prop].virtual) setVirtual(def, prop, value, options);
@@ -1571,7 +1639,7 @@
       statusNote = "";
       commit({ rebuild: true });
     }
-    // 改应用范围：换到更大的范围时，把本页（本阶段）对这个元素的调整一起带过去。
+    // 改应用范围：换到更大的范围时，把本页（同组）对这个元素的调整一起带过去。
     function setLevel(def, level, content) {
       const list = levels();
       const current = content ? contentLevel(def) : editLevel(def);
@@ -1625,6 +1693,10 @@
     function measured(def, node, prop) {
       const cs = getComputedStyle(node);
       switch (prop) {
+        case "formulaX": return px(cs.getPropertyValue("--heat-formula-x"));
+        case "formulaY": return px(cs.getPropertyValue("--heat-formula-y"));
+        case "formulaScale": return (parseFloat(cs.getPropertyValue("--heat-formula-scale")) || 1) * 100;
+        case "frameInterval": return parseFloat(cs.getPropertyValue("--heat-frame-interval")) || 0.2;
         case "left": return px(cs.left) / (containerOf(node).clientWidth || 1) * 100;
         case "top": return px(cs.top) / (containerOf(node).clientHeight || 1) * 100;
         case "width": return px(cs.width) / widthBasis(def, node) * 100;
@@ -1669,6 +1741,7 @@
       const parentDisplay = node.parentElement ? getComputedStyle(node.parentElement).display : "";
       const mode = posMode(def);
       let list = KIND_PROPS[def.kind] || KIND_PROPS.box;
+      if (def.key === "methodStripHeat") list = ["frameInterval", ...list];
       // 一次调好几个（或跟着数值移动的标注）时，用偏移量，不用坐标。
       if (mode === "offset") list = list.map((p) => (p === "x" ? "dx" : p === "y" ? "dy" : p));
       return list.filter((prop) => {
@@ -1757,6 +1830,8 @@
       const rootEl = ctx.pickRoot();
       if (!node || !rootEl || !(node === rootEl || rootEl.contains(node))) return null;
       if (node.closest(".beam-layout-tuner")) return null;
+      const figureFormula = node.closest("[data-figure-formula-heat]");
+      if (figureFormula) return figureFormula;
       while (node !== rootEl && (INLINE_TAGS.has(node.tagName) || (node.closest(".fraction") && node !== node.closest(".fraction")) || node.classList.contains("math-variable"))) node = node.parentElement;
       const force = node.closest(".force-free-element");
       if (force && (node.tagName === "IMG" || node.tagName === "CANVAS")) node = force;
@@ -1935,6 +2010,7 @@
           const level = editLevel(def);
           const group = nodes.length > 1 ? `<span class="badge">共 ${nodes.length} 个，一起调整</span>` : "";
           let tip = KIND_TIPS[def.kind] ? `<p class="hint">${KIND_TIPS[def.kind]}</p>` : "";
+          if (def.key === "methodStripHeat") tip += '<p class="hint">每张显示时间默认 0.2 秒；修改后会重新播放，依次显示四张并停在最后一张。</p>';
           if (ctx.kind === "console" && frameOn() && def.key === "c:main") tip += '<p class="hint inherit">带外框时：控制台主体就是屏幕，外框跟着它走。改宽度就是改屏幕宽度（放大预览里，学生预览的页面也会跟着变宽或变窄）。</p>';
           if (def.kind === "canvas") {
             const mainDef = ctx.registry.find((d) => d.kind === "main");
@@ -2120,7 +2196,7 @@
       const targets = [];
       if (showing && selected) {
         const nodes = selectedNodes();
-        const coords = nodes.length === 1 && selected.def.kind !== "label";
+        const coords = nodes.length === 1 && selected.def.kind !== "label" && selected.def.kind !== "figureFormula";
         nodes.forEach((node, index) => {
           let tag = "";
           if (index === 0) {
@@ -2148,7 +2224,7 @@
       const first = showing && selected ? selectedNodes()[0] : null;
       const props = first ? propsFor(selected.def, first) : [];
       const dims = first ? dimsFor(selected.def, first) : {};
-      const canMove = Boolean(first && (props.includes("x") || props.includes("dx")));
+      const canMove = Boolean(first && (props.includes("x") || props.includes("dx") || props.includes("formulaX")));
       const canCorner = Boolean(first && (dims.w || dims.h || dims.both || dims.scale));
       // 四条边都能拖：右、下边改宽高（左上角不动）；左、上边连位置一起改（对边不动）。
       handles.move.hidden = !canMove;
@@ -2205,7 +2281,13 @@
       const container = containerOf(node);
       beginEdit(`drag|${def.key}|${mode}`, true);
       if (mode === "move") {
-        if (posMode(def) === "canvas") {
+        if (def.kind === "figureFormula") {
+          const matrix = node.parentElement.getScreenCTM();
+          if (!matrix) return;
+          values.formulaMatrix = matrix.inverse();
+          values.formulaX = valueOf(def, node, "formulaX");
+          values.formulaY = valueOf(def, node, "formulaY");
+        } else if (posMode(def) === "canvas") {
           const cs = getComputedStyle(node);
           values.canvas = true;
           values.left = px(cs.left);
@@ -2238,7 +2320,11 @@
         const dy = moveEvent.clientY - start.y;
         const opts = { noUndo: true, skipPersist: true, keepNote: true };
         if (mode === "move") {
-          if (values.canvas) {
+          if (values.formulaMatrix) {
+            const m = values.formulaMatrix;
+            setProp(def, "formulaX", values.formulaX + m.a * dx + m.c * dy, opts);
+            setProp(def, "formulaY", values.formulaY + m.b * dx + m.d * dy, opts);
+          } else if (values.canvas) {
             const refs = canvasRefs(node);
             setStored(def, "lvw", (values.left + dx) / vwPx(), opts, { tag: "x", legacy: ["left"], refs });
             setStored(def, "tvw", (values.top + dy) / vwPx(), opts, { tag: "y", legacy: ["top"], refs });
@@ -2356,7 +2442,11 @@
       const props = propsFor(def, node);
       const sx = key === "ArrowLeft" ? -1 : key === "ArrowRight" ? 1 : 0;
       const sy = key === "ArrowUp" ? -1 : key === "ArrowDown" ? 1 : 0;
-      if (props.includes("x")) {
+      if (props.includes("formulaX")) {
+        const step = event.shiftKey ? 10 : 1;
+        if (sx) setProp(def, "formulaX", valueOf(def, node, "formulaX") + sx * step);
+        if (sy) setProp(def, "formulaY", valueOf(def, node, "formulaY") + sy * step);
+      } else if (props.includes("x")) {
         const step = event.shiftKey ? 10 : 1;
         if (sx) setProp(def, "x", measuredVirtual(node, "x") + sx * step);
         if (sy) setProp(def, "y", measuredVirtual(node, "y") + sy * step);
@@ -2413,7 +2503,6 @@
         } else if (key.startsWith("A2-")) {
           if (Number(state.stage) !== 3) await api({ type: "set_stage", stage: 3 });
           await api({ type: "set_deformation_reveal", step: parseInt(key.slice(3), 10) });
-          if (key.endsWith("-compareHeat")) await api({ type: "set_compare_heat", open: true }); // heat
         } else if (key === "M") await api({ type: "set_stage", stage: 4 });
         if (typeof tick === "function") await tick();
       } catch (error) { console.error(error); }
@@ -2433,7 +2522,7 @@
       const start = pageKey();
       const sizes = {};
       for (const [key] of pages) {
-        if (!CANVAS_PAGE.test(key)) continue;
+        if (!isCanvasPage(key)) continue;
         await gotoPage(key);
         const size = await settledCanvasSize(key);
         if (size) sizes[key] = size;
@@ -2551,7 +2640,7 @@
         const regimeKey = workRegime();
         if (!regimeKey) return;
         if (ctx.kind === "console") resetBuckets(CONSOLE_KEYS, `已重置控制台（${REGIMES[regimeKey].label}档），可以撤销。`);
-        else resetBuckets([pageKey()], `已清除本页单独的调整（${REGIMES[regimeKey].label}档，可以撤销）。「本阶段通用」「所有页通用」的调整还在：要清掉，选中元素后点「重置此元素」，或用「更多」里的全部重置。`);
+        else resetBuckets([pageKey()], `已清除本页单独的调整（${REGIMES[regimeKey].label}档，可以撤销）。「同组通用」「所有页通用」的调整还在：要清掉，选中元素后点「重置此元素」，或用「更多」里的全部重置。`);
       } else if (action === "reset-everything") {
         // 点两下才执行：第一下变成「确定全部重置？」，4 秒内再点一下。（手机调试页在外壳页里确认过）
         if (!remote && actionEl.dataset.armed !== "1") {
