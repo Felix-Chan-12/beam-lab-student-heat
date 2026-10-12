@@ -379,6 +379,7 @@ function showToast(message) {
 
 const OFFLINE_CLASSROOM_STATE_KEY = "beam-offline-classroom-state-v5-sep27-heat";
 const OFFLINE_STUDENT_STATE_KEY = "beam-offline-student-state-v5-sep27-heat";
+const TRANSFER_SCENARIO_HEAT = "beam-width-double-heat";
 
 function offlineStateKey() {
   return role === "teacher" || isPreview ? OFFLINE_CLASSROOM_STATE_KEY : OFFLINE_STUDENT_STATE_KEY;
@@ -403,6 +404,7 @@ function createOfflineState() {
     offline_choice: "",
     vote_feedback_visible: false,
     migration_answers_visible: false,
+    migration_scenario: TRANSFER_SCENARIO_HEAT,
     migration_choice: "",
     migration_comment: "",
     migration_submitted: false,
@@ -414,6 +416,16 @@ function loadOfflineState() {
     const saved = JSON.parse(localStorage.getItem(offlineStateKey()) || "null");
     if (saved?.progress && saved?.vote_counts) {
       saved.force_reveal_step = Math.min(A1_LAST_STEP_HEAT, Number(saved.force_reveal_step || 0));
+      // 迁移题已换成梁宽加倍：旧题的提交不能锁住新题，前面各阶段的进度继续保留。
+      if (saved.migration_scenario !== TRANSFER_SCENARIO_HEAT) {
+        saved.migration_scenario = TRANSFER_SCENARIO_HEAT;
+        saved.migration_answers_visible = false;
+        saved.migration_choice = "";
+        saved.migration_comment = "";
+        saved.migration_submitted = false;
+        saved.progress.migration = 0;
+        saveOfflineState(saved);
+      }
       return saved;
     }
   } catch (_) {}
@@ -810,7 +822,7 @@ function bindDeformationStoryboard() {
     slider.disabled = uniform;
     card.querySelector('[data-force-value]').textContent = `${formatNumberHeat(2 * deformationBasicX1)} kN`;
     card.querySelector('[data-force-readouts]').innerHTML = labReadouts(false, deformationBasicX1, mode)
-      + (step >= 4 ? `<div class="readout displacement-readout"><strong>${formatNumberHeat(1.5 - 4 * x1)} mm</strong><small>B点位移 Δ<sub>B</sub>（向下为正）</small></div>` : '');
+      + (step >= 4 ? `<div class="readout displacement-readout"><strong>${formatNumberHeat(4 * x1 - 1.5)} mm</strong><small>B点位移 Δ<sub>B</sub>（向上为正）</small></div>` : '');
     card.querySelector('.hint').innerHTML = uniform ? '温度单独作用，F<sub>yB</sub> 固定为零。' : '一个滑块共同控制上下两排。';
     card.querySelector('[data-special-candidates]').hidden = step < 4;
     document.querySelectorAll('[data-special-candidate]').forEach(button => button.setAttribute('aria-pressed', String(Number(button.dataset.specialCandidate) === x1)));
@@ -981,14 +993,14 @@ function updateDeformationFormulaValue(step, r) {
 }
 
 function deformationFormulaHtml(step, r = deformationBasicX1) {
-  // heat：温度引起的 B 点位移 αΔt·l²/(2h) = 1.5 mm（向下）；B 点总位移 = 1.5 − 4r mm（r 为内部值，FyB = 2r kN）。
+  // heat：全节沿 FyB（向上）为正。温度引起的 B 点位移 Δ1t = −αΔt·l²/(2h) = −1.5 mm（向下）；B 点总位移 = 4r − 1.5 mm（r 为内部值，FyB = 2r kN）。
   const uniform = '<span class="fraction"><span><i>α</i>Δ<i>t</i><i>l</i><sup>2</sup></span><span>2<i>h</i></span></span>';
   const fyb = '<span class="fraction"><span><i>l</i><sup>3</sup></span><span>3<i>E</i><i>I</i></span></span><i>F</i><sub><i>yB</i></sub>';
-  if (step === 2) return `&minus;${fyb}`;
-  if (step === 3) return `${uniform} = 1.5 mm`;
-  const combined = `Δ<sub>B</sub> = <span class="formula-fyb-heat">&minus;${fyb}</span> + <span class="formula-thermal-heat">(${uniform} = 1.5 mm)</span>`;
+  if (step === 2) return fyb;
+  if (step === 3) return `&minus;${uniform} = &minus;1.5 mm`;
+  const combined = `Δ<sub>B</sub> = <span class="formula-fyb-heat">${fyb}</span> + <span class="formula-thermal-heat">(&minus;${uniform} = &minus;1.5 mm)</span>`;
   if (step === 4) return combined;
-  const result = `${formatNumberHeat(1.5 - 4 * r)} mm`;
+  const result = `${formatNumberHeat(4 * r - 1.5)} mm`;
   return `${combined} = ${result}`;
 }
 
@@ -1031,6 +1043,7 @@ function updateDeformationReveal(state) {
 
 function renderForce() {
   app.innerHTML = `${steps(2)}<section class="panel force-story"><h1>${forceStepHeadings[0]}</h1>
+    ${calculationParametersHtmlHeat("compact")}
     <div class="force-composition">
       <div class="force-free-canvas" aria-label="11元素自由排版画布">
         ${Object.keys(FORCE_ELEMENT_META).map(forceElementHtml).join("")}
@@ -1057,6 +1070,7 @@ function renderDeformation() {
   lastDeformationRevealStep = 0;
   const slots = ["originalStructure", "originalMomentBg", "originalShearBg", "basicStructure", "basicMomentBg", "basicShearBg"];
   app.innerHTML = `${steps(3)}<section class="panel force-story deformation-story" data-reveal-step="0"><h1></h1>
+    ${calculationParametersHtmlHeat("compact")}
     <div class="force-composition deformation-composition">
       <div class="force-free-canvas" aria-label="切开竖向链杆前后的受力对照">
         <div class="deformation-row-divider" data-deformation-divider hidden aria-hidden="true"></div>
@@ -1084,6 +1098,19 @@ function renderDeformation() {
   document.querySelector(".force-free-canvas").insertAdjacentHTML("beforeend", compareViewHtmlHeat()); // heat
   bindDeformationStoryboard();
   updateDeformationReveal(currentState);
+}
+
+function calculationParametersHtmlHeat(variant) {
+  return `<aside class="calculation-parameters-heat parameters-${variant}-heat" data-calculation-parameters-heat aria-label="计算参数">
+    <strong class="parameters-heading-heat">计算参数</strong>
+    <div class="parameters-values-heat">
+      <span><i>l</i> = 3 m</span>
+      <span><i>h</i> = 0.30 m</span>
+      <span><i>EI</i> = 4500 kN·m<sup>2</sup></span>
+      <span><i>α</i> = 4×10<sup>−6</sup> /℃</span>
+      <span>Δ<i>t</i> = 25℃</span>
+    </div>
+  </aside>`;
 }
 
 // ===== heat：A1 右侧「力法步骤」框；协调图与位移公式 =====
@@ -1114,8 +1141,8 @@ const STEP_FORMULAS_HEAT = {
 };
 const STEP_FIGURES_HEAT = {
   methodStrip: { frames: METHOD_STRIP_FRAMES_HEAT, alt: "基本结构在 FyB 作用下和在温度作用下的 B 点位移，原结构 B 点位移为零" },
-  fybDisplacement: { src: METHOD_STRIP_FRAMES_HEAT[3], alt: "FyB 引起的 B 点位移：δ11 FyB = −l³ FyB / (3EI)", formulas: ["fyb"] },
-  thermalDisplacement: { src: "/assets/force-story/scene/A1-4-增补-新-5.png", alt: "力位移与温度位移：δ11 FyB = −l³ FyB / (3EI)，Δ1T = αΔt l² / (2h) = 1.5 mm", formulas: ["fyb", "thermal"] },
+  fybDisplacement: { src: METHOD_STRIP_FRAMES_HEAT[3], alt: "FyB 引起的 B 点位移：δ11 FyB = l³ FyB / (3EI)", formulas: ["fyb"] },
+  thermalDisplacement: { src: "/assets/force-story/scene/A1-4-增补-新-5.png", alt: "力位移与温度位移：δ11 FyB = l³ FyB / (3EI)，Δ1T = −αΔt l² / (2h) = −1.5 mm", formulas: ["fyb", "thermal"] },
   bendSources: { src: "/assets/force-story/scene/bend-sources-heat.png", alt: "弯曲变形的两个来源：由弯矩引起的用 M/EI 表示、用图乘法计算；由温度引起的不在 M/EI 里，要用温度位移公式" },
 };
 
@@ -1138,7 +1165,8 @@ function stepFigureHtmlHeat(kind) {
   } else {
     content = (figure.frames || [figure.src]).map((src, index) => `<img src="${runtimeUrl(src)}" alt="${figure.alt}" ${index ? "hidden" : ""}/>`).join("");
   }
-  return `<figure class="step-figure-heat" data-step-figure-heat="${kind}" hidden>${content}</figure>`;
+  const parameters = kind === "bendSources" ? "" : calculationParametersHtmlHeat("prominent");
+  return `<figure class="step-figure-heat" data-step-figure-heat="${kind}" hidden>${parameters}${content}</figure>`;
 }
 
 function methodStripIntervalHeat(figure) {
@@ -1173,6 +1201,7 @@ function playMethodStripHeat(figure) {
 function updateStepFigureHeat(story, on, kind) {
   if (!story) return;
   story.toggleAttribute("data-figure-heat", Boolean(on));
+  story.dataset.parametersHeat = on && kind !== "bendSources" ? "prominent" : "compact";
   story.querySelectorAll("[data-step-figure-heat]").forEach(figure => {
     const active = Boolean(on) && figure.dataset.stepFigureHeat === kind;
     const entering = active && figure.hidden;
@@ -1370,12 +1399,13 @@ function renderMigration() {
 // 每位同学一句想法，卡片开头的「+人数」= 句数；同一选项的几句连成一行，像走马灯一样向左滚动。
 // 下面是默认内容；在版面调试里可以改人数和文字（存在 layout-overrides.js 的 transfer 里）。人数为 0 的选项也显示卡片，写灰色的「暂无回答」。
 const TRANSFER_DEFAULT = {
-  B: 0,
-  C: 4,
+  scenario: TRANSFER_SCENARIO_HEAT,
+  B: 4,
+  C: 0,
   texts: {
-    A: ["需要增加木柱的力。", "平衡方程里要多一个木柱的力。"],
-    B: ["B点现在是会压缩的木柱，释放约束时要用木柱的力代替 <i>F</i><sub>yB</sub>。"],
-    C: ["温度让B点想往下走，木柱被压缩，位移不再是0。", "木柱能让出一点变形，Δ<sub>B</sub> 不再等于 0。", "B点的位移应等于木柱的附加压缩量 <i>F</i><sub>yB</sub>/<i>k</i>。", "B点向下的位移要和木柱的压缩量一样大，等于 <i>F</i><sub>yB</sub>/<i>k</i>。"],
+    A: [],
+    B: ["更新 <i>EI</i>，重新计算。", "δ<sub>11</sub> 减半。", "反力位移项减半，温度位移不变。", "2<i>F</i><sub>yB</sub> 改为 <i>F</i><sub>yB</sub>。"],
+    C: [],
   },
 };
 window.BEAM_TRANSFER_DEFAULT = structuredClone(TRANSFER_DEFAULT);
@@ -1424,13 +1454,13 @@ window.addEventListener("beam-votes-changed", refreshTransferCards);
 function renderTransfer() {
   const phone = isSelfGuidedStudent; // 手机：选、写、提交一次，提交后看到回答；教师投屏：点「显示回答」才出现
   app.innerHTML = `<section class="panel transfer-story">
-    <header class="transfer-head"><h1>考虑立柱压缩，哪一处求解条件需要调整？</h1></header>
+    <header class="transfer-head"><h1>木梁截面宽度加倍，求解过程哪里需要修改？</h1><p class="transfer-context-heat">梁高、跨度、材料和温差保持不变。</p></header>
     <div class="transfer-body">
       <div class="transfer-ask"><h3>选择位置 + 说明修改</h3>
         <div class="options transfer-options">
           <button class="option" data-transfer-choice="A" aria-pressed="false"><strong>A</strong><span>静力平衡条件</span></button>
-          <button class="option" data-transfer-choice="B" aria-pressed="false"><strong>B</strong><span>第一次提问<small>释放约束，用 <i>F</i><sub>yB</sub> 代替</small></span></button>
-          <button class="option" data-transfer-choice="C" aria-pressed="false"><strong>C</strong><span>第二次提问<small>补充位移条件</small></span></button>
+          <button class="option" data-transfer-choice="B" aria-pressed="false"><strong>B</strong><span>第一次提问<small>Δ<sub>1P</sub> = 0，计算 δ<sub>11</sub> 和 <i>F</i><sub>yB</sub></small></span></button>
+          <button class="option" data-transfer-choice="C" aria-pressed="false"><strong>C</strong><span>第二次提问<small>补上温度位移，令B点总位移为0</small></span></button>
         </div>
         <label class="transfer-label" for="transferIdea">你准备怎样修改？</label>
         <div class="vote-submit-row${phone ? "" : " transfer-idea-only"}"><input id="transferIdea" type="text" maxlength="80" placeholder="写一句修改想法……"/>${phone ? '<button class="primary" id="submitTransfer" disabled>提交</button>' : ""}</div>

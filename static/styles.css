@@ -715,6 +715,7 @@ body:not(.layout-mode) :is(.transfer-options small, .transfer-options small *, .
 .transfer-story { display: grid; gap: 20px; }
 .transfer-head { padding-bottom: 16px; border-bottom: 1px solid var(--line); }
 .transfer-head h1 { margin: 0; line-height: 1.4; }
+.transfer-context-heat { margin: 4px 0 0; color: var(--muted); line-height: 1.3; }
 .transfer-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 28px; align-items: start; }
 .transfer-body h3 { margin: 0 0 12px; }
 .transfer-options { margin-top: 0; }
@@ -752,6 +753,9 @@ body:not(.layout-mode) .transfer-card .transfer-count { font-size: calc((var(--t
 /* M 页字号和 A2-6（E 投票页）对齐（投屏宽屏档）：题目 150%、两栏标题 140%、选项和回答 160%、「你准备怎样修改？」和输入框 150%。
    在版面调试里再调文字大小，是在这个基础上放大缩小。手机上不变。 */
 @media (min-width: 1300px) {
+  .transfer-story { gap: 14px; }
+  .transfer-head { padding-bottom: 12px; }
+  .transfer-options .option { padding: 12px 18px; }
   body:not(.layout-mode) :is(.transfer-head h1, .transfer-head h1 *) { font-size: calc(var(--text-title) * 1.5) !important; }
   body:not(.layout-mode) :is(.transfer-body h3, .transfer-body h3 *) { font-size: calc(var(--text-title) * 1.4) !important; }
   body:not(.layout-mode) .transfer-options .option :is(strong, span) { font-size: calc(var(--text-body) * 1.6) !important; }
@@ -833,3 +837,36 @@ body .step-figure-formula-heat :is(sub, sup) { font-size: 70% !important; line-h
 .caption-role-heat[hidden] { display: none !important; }
 body:not(.layout-mode) .caption-role-heat { font-size: var(--text-small) !important; }
 .force-story:not(.deformation-story) .caption-role-heat { display: block; text-align: center; }
+
+/* 同一组题设：整图页放在顶部留白，其余计算页在标题旁显示，窄屏换行。 */
+.calculation-parameters-heat { --heat-parameters-size: 20px; --text-body: calc(var(--heat-parameters-size) * var(--heat-parameters-scale, 1)); box-sizing: border-box; color: #344c68; line-height: 1.45; }
+body .calculation-parameters-heat, body .calculation-parameters-heat * { font-size: var(--text-body) !important; }
+body .calculation-parameters-heat sup { font-size: .65em !important; line-height: 0; }
+.parameters-values-heat { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 24px; }
+.parameters-values-heat > span { white-space: nowrap; }
+.parameters-heading-heat { flex-shrink: 0; color: var(--blue); }
+.parameters-compact-heat { display: flex; flex: 0 0 auto; align-items: baseline; gap: 10px 20px; margin: 0 14px 10px; padding: 5px 0 8px; border-bottom: 1px solid #dce5ee; }
+.force-story[data-parameters-heat="prominent"] > .parameters-compact-heat { display: none; }
+.parameters-prominent-heat { --heat-parameters-size: 30px; position: absolute; z-index: 3; top: 22px; left: 24px; right: 24px; padding: 12px 18px; border-left: 5px solid var(--blue); border-radius: 0 10px 10px 0; background: #f0f5fb; font-weight: 700; }
+.parameters-prominent-heat .parameters-heading-heat { display: block; margin-bottom: 5px; letter-spacing: .08em; }
+body .parameters-prominent-heat .parameters-heading-heat { font-size: calc(var(--text-body) * .7) !important; }
+@media (min-width: 781px) {
+  .force-story:has(.method-steps-heat:not([hidden])) .parameters-prominent-heat { right: calc(var(--force-control-width) + 24px); }
+  .step-figure-heat:has(> .parameters-prominent-heat) > :is(img, svg) { top: 154px; height: calc(100% - 164px); }
+}
+@media (min-width: 1300px) {
+  .force-story:has(> .parameters-compact-heat) { position: relative; }
+  .parameters-compact-heat { position: absolute; top: 9px; right: 14px; margin: 0; padding: 3px 0; border: 0; }
+  .force-story:has(.method-steps-heat:not([hidden])) .parameters-prominent-heat { right: 398px; }
+}
+@media (min-width: 781px) and (max-width: 1299px) {
+  .parameters-prominent-heat { --heat-parameters-size: 24px; top: 14px; left: 16px; padding: 10px 14px; }
+  .parameters-values-heat { column-gap: 18px; }
+}
+@media (max-width: 780px) {
+  .calculation-parameters-heat { --heat-parameters-size: 16px; }
+  .parameters-compact-heat { display: block; margin: 0 14px 10px; }
+  .parameters-compact-heat .parameters-heading-heat { display: block; margin-bottom: 4px; }
+  .parameters-prominent-heat { position: static; margin: 12px; padding: 10px 12px; }
+  .parameters-values-heat { gap: 5px 18px; }
+}

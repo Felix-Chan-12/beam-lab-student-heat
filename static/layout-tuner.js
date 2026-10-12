@@ -308,6 +308,7 @@
     // heat：A1-1～A1-5 右侧「力法步骤」框，以及各页整图
     { key: "methodStepsHeat", label: "「力法步骤」框", sel: "#app .method-steps-heat", kind: "box" },
     { key: "methodStepsTitleHeat", label: "「力法步骤」标题", sel: "#app .method-steps-heat > h2", kind: "text" },
+    { key: "calculationParametersHeat", label: "计算参数（整体）", sel: "#app [data-calculation-parameters-heat]", kind: "group" },
     { key: "methodStripHeat", label: "A1-4 顺序示意图", sel: '#app [data-step-figure-heat="methodStrip"]', kind: "box" },
     { key: "fybDisplacementHeat", label: "A1-5 FyB 位移图", sel: '#app [data-step-figure-heat="fybDisplacement"]', kind: "box" },
     { key: "bendSourcesHeat", label: "A2-1 弯曲变形的两个来源", sel: '#app [data-step-figure-heat="bendSources"]', kind: "box" },
@@ -317,6 +318,7 @@
     { key: "tfStory", label: "M：整块面板", sel: "#app > .transfer-story", kind: "panel" },
     { key: "tfHead", label: "M：题目区", sel: "#app .transfer-head", kind: "group" },
     { key: "tfTitle", label: "M：题目", sel: "#app .transfer-head h1", kind: "text" },
+    { key: "tfContextHeat", label: "M：情境条件", sel: "#app .transfer-context-heat", kind: "text" },
     { key: "tfBody", label: "M：左右两栏", sel: "#app .transfer-body", kind: "group" },
     { key: "tfAsk", label: "M：左栏（选择与修改）", sel: "#app .transfer-ask", kind: "group" },
     { key: "tfAskTitle", label: "M：「选择位置 + 说明修改」", sel: "#app .transfer-ask > h3", kind: "text" },
@@ -537,6 +539,9 @@
   // M 页学生回答：{ B: 人数, C: 人数, texts: { A: [每人一句…], B: […], C: […] } }，不对就不用。
   function normTransfer(raw) {
     if (!raw || typeof raw !== "object") return null;
+    // 只更新旧题的回答；恢复编辑草稿时保留其它页面和版面调整。
+    const current = window.BEAM_TRANSFER_DEFAULT;
+    if (current?.scenario && raw.scenario !== current.scenario) raw = current;
     const count = (value) => { const n = Math.round(Number(value)); return Number.isFinite(n) && n >= 0 ? Math.min(n, 999) : null; };
     const B = count(raw.B);
     const C = count(raw.C);
@@ -546,7 +551,7 @@
       const list = raw.texts && Array.isArray(raw.texts[key]) ? raw.texts[key] : [];
       texts[key] = list.slice(0, 999).map((text) => String(text == null ? "" : text).slice(0, 300));
     }
-    return { B, C, texts };
+    return { scenario: raw.scenario, B, C, texts };
   }
   // 教师版各页画布的大小（手机照搬用）：{ width: 量的时候教师版页面的宽（px），pages: { "A1-0": [画布宽, 画布高]（px）, … } }
   function normCanvas(raw) {
@@ -666,7 +671,11 @@
     if (p.pb != null) d.push(`padding-bottom: ${p.pb}px${I}`);
     if (p.gap != null) d.push(`gap: ${p.gap}px${I}`);
     if (p.order != null) d.push(`order: ${p.order}${I}`);
-    if (p.text != null) d.push(...textVars(round(p.text / 100, 4)));
+    if (p.text != null) {
+      const scale = round(p.text / 100, 4);
+      if (entry.sel === "#app [data-calculation-parameters-heat]") d.push(`--heat-parameters-scale: ${scale}${I}`);
+      else d.push(...textVars(scale));
+    }
     if (p.ar != null) d.push(`aspect-ratio: ${p.ar}${I}`);
     if (p.colR != null) d.push(`grid-template-columns: minmax(0, 1fr) ${p.colR}px${I}`);
     if (p.heroL != null) d.push(`grid-template-columns: minmax(0, ${p.heroL}fr) minmax(0, ${round(100 - p.heroL, 2)}fr)${I}`);
@@ -828,7 +837,7 @@
           const scope = scopeFor(bucketKey, regimeKey);
           for (const [entryKey, entry] of Object.entries(pages[bucketKey])) {
             const body = !inherit ? declarations(entry)
-              : replica ? (REPLICA_KINDS.has(entry.kind) || entry.kind === "canvas" ? replicaDeclarations(entry, replica) : declarations(entry, ["frameInterval"]))
+              : replica ? (REPLICA_KINDS.has(entry.kind) || entry.kind === "canvas" ? replicaDeclarations(entry, replica) : declarations(entry, entryKey === "calculationParametersHeat" ? ["text"] : ["frameInterval"]))
               : declarations(Object.assign({}, entry, { props: inheritedProps(entry) }));
             // :where() 不增加优先级，保持「两种视图 → 当前视图」的先后关系。
             const layoutScope = isConsoleKey(bucketKey) && FRAME_OWNED.has(entryKey) ? `${scope}:where(:not(.beam-frame))` : scope;

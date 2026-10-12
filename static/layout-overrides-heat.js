@@ -871,7 +871,7 @@ window.BEAM_LAYOUT_OVERRIDES = {
           "kind": "figureFormula",
           "label": "紫色温度位移公式",
           "props": {
-            "formulaScale": 120,
+            "formulaScale": 112,
             "formulaX": 2954.3,
             "formulaY": 535
           },
@@ -1643,23 +1643,18 @@ window.BEAM_LAYOUT_OVERRIDES = {
   },
   "savedAt": "2026-10-11 19:51:15",
   "transfer": {
-    "B": 0,
-    "C": 5,
+    "scenario": "beam-width-double-heat",
+    "B": 4,
+    "C": 0,
     "texts": {
-      "A": [
-        "需要增加木柱的力。",
-        "平衡方程里要多一个木柱的力。"
-      ],
+      "A": [],
       "B": [
-        "B点现在是会压缩的木柱，释放约束时要用木柱的力代替 <i>F</i><sub>yB</sub>。"
+        "更新 <i>EI</i>，重新计算。",
+        "δ<sub>11</sub> 减半。",
+        "反力位移项减半，温度位移不变。",
+        "2<i>F</i><sub>yB</sub> 改为 <i>F</i><sub>yB</sub>。"
       ],
-      "C": [
-        "温度让B点想往下走，木柱被压缩，位移不再是0。",
-        "B点的位移应等于木柱的附加压缩量 <i>F</i><sub>yB</sub>/<i>k</i>。",
-        "B点不能再设位移为零。",
-        "木柱能让出一点变形，Δ<sub>B</sub> 不再等于 0。",
-        "B点向下的位移要和木柱的压缩量一样大，等于 <i>F</i><sub>yB</sub>/<i>k</i>。"
-      ]
+      "C": []
     }
   },
   "version": 3,
