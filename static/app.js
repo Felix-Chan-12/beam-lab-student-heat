@@ -141,7 +141,7 @@ const DEFORMATION_LABEL_MAP = {
 //   d1 A1-5 ← 原 A2-2（FyB 引起的B点位移，三联图叠加公式）
 //   d2 A2-0 ← 原 A2-3 的「荷载／温度对照」
 //   d3 A2-1   「弯曲变形的两个来源」整图（画布收起，只显示这张图；背后按原 A2-3 准备）
-//   d4 A2-2 ← 原 A2-3（温度单独作用，三联图叠加 1.5 mm 公式）
+//   d4 A2-2 ← 原 A2-3（温度单独作用，三联图叠加 4.5 mm 公式）
 //   d5 A2-3 ← 原 A2-4（叠加 · AI 辅助计算）      d6 A2-4 ← 原 A2-5（B点位移表达式）
 // 状态里存新步号；判断怎么画时换成 d（a2StepHeat）和原步号（a2LegacyStepHeat），原来的画法和数值一处不变。
 const A2_LEGACY_STEPS_HEAT = [1, 2, 3, 3, 3, 4, 5];
@@ -309,7 +309,7 @@ function applyForceLabelLayout(context = {}) {
     const response = forceCurveResponse(isMoment ? "moment" : "shear", current.r, s, current.mode);
     const baselineKey = `${parentMeta.system}${isMoment ? "Moment" : "Shear"}Baseline`;
     const direction = isMoment ? -values.momentDirection : 1;
-    const scale = isMoment ? values.momentScale : values.shearScale;
+    const scale = isMoment ? values.momentScale / 3 : values.shearScale / 3;
     const screenDelta = direction * response * scale;
     const curveY = values[baselineKey] + screenDelta;
     const canvasHeight = Math.round(1000 / parentMeta.ratio);
@@ -491,7 +491,7 @@ function applyOfflineAction(state, action) {
   } else if (action.type === "observe_force") {
     next.progress.force = Math.max(1, next.progress.force);
   } else if (action.type === "align") {
-    next.progress.alignments = Math.abs(Number(action.x1) - 0.375) <= 0.02 ? 1 : 0;
+    next.progress.alignments = Math.abs(Number(action.x1) - THEORETICAL_FYB_RATIO) <= 0.02 ? 1 : 0;
   }
   return next;
 }
@@ -670,7 +670,7 @@ function labReadouts(deformation = false, value = x1, mode = "combined") {
   return `<div class="readouts">
     <div class="readout"><strong>${formatNumberHeat(fya)} kN</strong><small>F<sub>yA</sub></small></div>
     <div class="readout"><strong>${formatNumberHeat(fyb)} kN</strong><small>X<sub>1</sub> = F<sub>yB</sub></small></div>
-    <div class="readout"><strong>${formatNumberHeat(moment)} kN·m</strong><small>M<sub>A</sub></small></div>
+    <div class="readout"><strong>${formatNumberHeat(moment)} kN·m</strong><small>A端约束反力矩 M<sub>A</sub></small></div>
     <div class="readout"><strong class="zero">0.000</strong><small>平衡残差</small></div>
     ${deformation ? `<div class="readout" style="grid-column:1/-1"><strong class="${Math.abs(delta) < .004 ? "zero" : ""}">${delta.toFixed(4)} ql⁴/EI</strong><small>Δ<sub>B</sub> = X<sub>1</sub>l³/3EI − ql⁴/8EI</small></div>` : ""}
   </div>`;
@@ -730,8 +730,9 @@ function formatForceValue(type, r, mode = "combined") {
     const value = mode === "uniform" ? 0 : -2 * r;
     return `<i>F</i><sub>yA</sub> = ${formatNumberHeat(value)} kN`;
   }
-  const moment = 6 * forceCurveResponse("moment", r, 0, mode);
-  return `<i>M</i><sub>A</sub> = ${formatNumberHeat(moment)} kN·m`;
+  // 曲线沿受拉侧绘制；梁端内弯矩与 A 端约束反力矩符号相反。
+  const moment = -6 * forceCurveResponse("moment", r, 0, mode);
+  return `<i>M</i><sub>A</sub> = ${moment > 0 ? "+" : ""}${formatNumberHeat(moment)} kN·m`;
 }
 
 // heat：显示用数值（kN、kN·m、mm 统一两位小数）；负号用“−”，不出现 −0.00。
@@ -802,8 +803,8 @@ function bindDeformationStoryboard() {
   slider.addEventListener('pointerdown', () => { keyboardInput = false; });
   const refresh = (stepHeat = a2StepHeat()) => {
     const step = a2LegacyStepHeat(stepHeat); // heat：下面的判断都按原步号（见 A2_LEGACY_STEPS_HEAT）
-    // A2-4 教师预览和学生页都从满足协调的 FyB = 0.75 kN 开始，随后仍可拖动观察。
-    if (step === 5 && lastDeformationRevealStep !== 5) x1 = .375;
+    // A2-4 教师预览和学生页都从满足协调的 FyB = 2.25 kN 开始，随后仍可拖动观察。
+    if (step === 5 && lastDeformationRevealStep !== 5) x1 = THEORETICAL_FYB_RATIO;
     if (step < 4) {
       aiDeformationEnabled = false;
       aiDeformationProgress = null;
@@ -822,7 +823,7 @@ function bindDeformationStoryboard() {
     slider.disabled = uniform;
     card.querySelector('[data-force-value]').textContent = `${formatNumberHeat(2 * deformationBasicX1)} kN`;
     card.querySelector('[data-force-readouts]').innerHTML = labReadouts(false, deformationBasicX1, mode)
-      + (step >= 4 ? `<div class="readout displacement-readout"><strong>${formatNumberHeat(4 * x1 - 1.5)} mm</strong><small>B点位移 Δ<sub>B</sub>（向上为正）</small></div>` : '');
+      + (step >= 4 ? `<div class="readout displacement-readout"><strong>${formatNumberHeat(4 * x1 - 4.5)} mm</strong><small>B点位移 Δ<sub>B</sub>（向上为正）</small><small>反力位移 +${formatNumberHeat(4 * x1)} mm<br>温度位移 −4.50 mm</small></div>` : '');
     card.querySelector('.hint').innerHTML = uniform ? '温度单独作用，F<sub>yB</sub> 固定为零。' : '一个滑块共同控制上下两排。';
     card.querySelector('[data-special-candidates]').hidden = step < 4;
     document.querySelectorAll('[data-special-candidate]').forEach(button => button.setAttribute('aria-pressed', String(Number(button.dataset.specialCandidate) === x1)));
@@ -865,7 +866,7 @@ function bindDeformationStoryboard() {
   slider.addEventListener('input', () => {
     const raw = Number(slider.value);
     const step = a2LegacyStepHeat(); // heat：原步号
-    x1 = step >= 4 && !keyboardInput && Math.abs(raw - .375) <= .008 ? .375 : raw;
+    x1 = step >= 4 && !keyboardInput && Math.abs(raw - THEORETICAL_FYB_RATIO) <= .008 ? THEORETICAL_FYB_RATIO : raw;
     refresh();
   });
   slider.addEventListener('change', () => { slider.value = String(x1); api({ type: 'observe_force', x1 }); });
@@ -966,7 +967,7 @@ function applyDeformationStepLayout(stepHeat) {
     const s = Math.max(0, Math.min(1, (localX - numeric.momentX0) / (numeric.momentXB - numeric.momentX0)));
     const response = forceCurveResponse("moment", currentR, s, mode);
     const baseline = isTop ? numeric.topMomentBaseline : numeric.bottomMomentBaseline;
-    const screenDelta = -numeric.momentDirection * response * numeric.momentScale;
+    const screenDelta = -numeric.momentDirection * response * numeric.momentScale / 3;
     const elementSlot = isTop ? "originalMomentBg" : "basicMomentBg";
     const canvasHeight = Math.round(1000 / FORCE_ELEMENT_META[elementSlot].ratio);
     const curveYPercent = (baseline + screenDelta) / canvasHeight * 100;
@@ -993,14 +994,14 @@ function updateDeformationFormulaValue(step, r) {
 }
 
 function deformationFormulaHtml(step, r = deformationBasicX1) {
-  // heat：全节沿 FyB（向上）为正。温度引起的 B 点位移 Δ1t = −αΔt·l²/(2h) = −1.5 mm（向下）；B 点总位移 = 4r − 1.5 mm（r 为内部值，FyB = 2r kN）。
+  // heat：全节沿 FyB（向上）为正。温度引起的 B 点位移 Δ1t = −αΔt·l²/(2h) = −4.5 mm（向下）；B 点总位移 = 4r − 4.5 mm（r 为内部值，FyB = 2r kN）。
   const uniform = '<span class="fraction"><span><i>α</i>Δ<i>t</i><i>l</i><sup>2</sup></span><span>2<i>h</i></span></span>';
   const fyb = '<span class="fraction"><span><i>l</i><sup>3</sup></span><span>3<i>E</i><i>I</i></span></span><i>F</i><sub><i>yB</i></sub>';
   if (step === 2) return fyb;
-  if (step === 3) return `&minus;${uniform} = &minus;1.5 mm`;
-  const combined = `Δ<sub>B</sub> = <span class="formula-fyb-heat">${fyb}</span> + <span class="formula-thermal-heat">(&minus;${uniform} = &minus;1.5 mm)</span>`;
+  if (step === 3) return `&minus;${uniform} = &minus;4.5 mm`;
+  const combined = `Δ<sub>B</sub> = <span class="formula-fyb-heat">${fyb}</span> + <span class="formula-thermal-heat">(&minus;${uniform} = &minus;4.5 mm)</span>`;
   if (step === 4) return combined;
-  const result = `${formatNumberHeat(4 * r - 1.5)} mm`;
+  const result = `${formatNumberHeat(4 * r - 4.5)} mm`;
   return `${combined} = ${result}`;
 }
 
@@ -1055,7 +1056,7 @@ function renderForce() {
       ${stepFigureHtmlHeat("methodStrip")}
       ${methodStepsHtmlHeat()}
       <div class="force-controls">
-        <aside class="control-card force-control" data-reveal="3" hidden><div class="range-row"><input data-force-slider type="range" min="0" max="1" step="0.005" value="${x1}" aria-label="原结构FyB滑块"/><strong data-force-value></strong></div><div data-force-readouts></div><p class="hint">拖动同一个 F<sub>yB</sub>，上下两组内力图同步更新。</p></aside>
+        <aside class="control-card force-control" data-reveal="3" hidden><div class="range-row"><input data-force-slider type="range" min="0" max="2.5" step="0.005" value="${x1}" aria-label="原结构FyB滑块"/><strong data-force-value></strong></div><div data-force-readouts></div><p class="hint">拖动同一个 F<sub>yB</sub>，上下两组内力图同步更新。</p></aside>
       </div>
     </div>
   </section>`;
@@ -1081,7 +1082,7 @@ function renderDeformation() {
       ${stepFigureHtmlHeat("thermalDisplacement")}
       ${methodStepsHtmlHeat()}
       <div class="force-controls">
-        <aside class="control-card force-control"><section class="ai-deformation-card" data-ai-deformation-card hidden><div class="ai-deformation-heading"><span>AI</span><strong>辅助生成整梁变形</strong></div><button type="button" class="primary ai-deformation-button" data-ai-deformation-button>启动 AI 辅助计算</button><small data-ai-deformation-status>逐点计算 · 计算 26 个采样点位移</small></section><div class="range-row"><input data-force-slider data-force-channel="basic" type="range" min="0" max="1" step="0.005" value="0" aria-label="切开链杆后FyB滑块"/><strong data-force-value></strong></div><div class="special-candidates" data-special-candidates hidden><button class="secondary" data-special-candidate="0"><i>F</i><sub>yB</sub>＝0</button><button class="secondary" data-special-candidate="0.25"><i>F</i><sub>yB</sub>＝0.5 kN</button><button class="secondary" data-special-candidate="0.5"><i>F</i><sub>yB</sub>＝1 kN</button></div><div data-force-readouts></div><p class="hint">上下滑块同步，两组内力图同步变化。</p></aside>
+        <aside class="control-card force-control"><section class="ai-deformation-card" data-ai-deformation-card hidden><div class="ai-deformation-heading"><span>AI</span><strong>辅助生成整梁变形</strong></div><button type="button" class="primary ai-deformation-button" data-ai-deformation-button>启动 AI 辅助计算</button><small data-ai-deformation-status>逐点计算 · 计算 26 个采样点位移</small></section><div class="range-row"><input data-force-slider data-force-channel="basic" type="range" min="0" max="2.5" step="0.005" value="0" aria-label="切开链杆后FyB滑块"/><strong data-force-value></strong></div><div class="special-candidates" data-special-candidates hidden><button class="secondary" data-special-candidate="0"><i>F</i><sub>yB</sub>＝0</button><button class="secondary" data-special-candidate="0.25"><i>F</i><sub>yB</sub>＝0.5 kN</button><button class="secondary" data-special-candidate="0.5"><i>F</i><sub>yB</sub>＝1 kN</button></div><div data-force-readouts></div><p class="hint">上下滑块同步，两组内力图同步变化。</p></aside>
       </div>
     </div>
   </section>`;
@@ -1107,7 +1108,7 @@ function calculationParametersHtmlHeat(variant) {
       <span><i>l</i> = 3 m</span>
       <span><i>h</i> = 0.30 m</span>
       <span><i>EI</i> = 4500 kN·m<sup>2</sup></span>
-      <span><i>α</i> = 4×10<sup>−6</sup> /℃</span>
+      <span><i>α</i> = 12×10<sup>−6</sup> /℃</span>
       <span>Δ<i>t</i> = 25℃</span>
     </div>
   </aside>`;
@@ -1142,7 +1143,7 @@ const STEP_FORMULAS_HEAT = {
 const STEP_FIGURES_HEAT = {
   methodStrip: { frames: METHOD_STRIP_FRAMES_HEAT, alt: "基本结构在 FyB 作用下和在温度作用下的 B 点位移，原结构 B 点位移为零" },
   fybDisplacement: { src: METHOD_STRIP_FRAMES_HEAT[3], alt: "FyB 引起的 B 点位移：δ11 FyB = l³ FyB / (3EI)", formulas: ["fyb"] },
-  thermalDisplacement: { src: "/assets/force-story/scene/A1-4-增补-新-5.png", alt: "力位移与温度位移：δ11 FyB = l³ FyB / (3EI)，Δ1T = −αΔt l² / (2h) = −1.5 mm", formulas: ["fyb", "thermal"] },
+  thermalDisplacement: { src: "/assets/force-story/scene/A1-4-增补-新-5.png", alt: "力位移与温度位移：δ11 FyB = l³ FyB / (3EI)，Δ1T = −αΔt l² / (2h) = −4.5 mm", formulas: ["fyb", "thermal"] },
   bendSources: { src: "/assets/force-story/scene/bend-sources-heat.png", alt: "弯曲变形的两个来源：由弯矩引起的用 M/EI 表示、用图乘法计算；由温度引起的不在 M/EI 里，要用温度位移公式" },
 };
 
@@ -1454,7 +1455,7 @@ window.addEventListener("beam-votes-changed", refreshTransferCards);
 function renderTransfer() {
   const phone = isSelfGuidedStudent; // 手机：选、写、提交一次，提交后看到回答；教师投屏：点「显示回答」才出现
   app.innerHTML = `<section class="panel transfer-story">
-    <header class="transfer-head"><h1>木梁截面宽度加倍，求解过程哪里需要修改？</h1><p class="transfer-context-heat">梁高、跨度、材料和温差保持不变。</p></header>
+    <header class="transfer-head"><h1>钢梁截面宽度加倍，求解过程哪里需要修改？</h1><p class="transfer-context-heat">梁高、跨度、材料和温差保持不变。</p></header>
     <div class="transfer-body">
       <div class="transfer-ask"><h3>选择位置 + 说明修改</h3>
         <div class="options transfer-options">
@@ -1512,7 +1513,7 @@ function updateTransferAnswers(state) {
 }
 
 function renderComplete() {
-  app.innerHTML = `<section class="panel waiting"><p class="eyebrow">CORE CHAIN COMPLETE</p><h1>从平衡候选，到协调真解</h1><p class="lead" style="margin-inline:auto">你已经完成：先判 → 受力数验 → 变形释理 → 全场迁移。</p><div class="formula"><i>F</i><sub>yB</sub> = 0.75 kN</div></section>`;
+  app.innerHTML = `<section class="panel waiting"><p class="eyebrow">CORE CHAIN COMPLETE</p><h1>从平衡候选，到协调真解</h1><p class="lead" style="margin-inline:auto">你已经完成：先判 → 受力数验 → 变形释理 → 全场迁移。</p><div class="formula"><i>F</i><sub>yB</sub> = 2.25 kN</div></section>`;
 }
 
 function drawLab(canvas, r, deformation, options = {}) {
@@ -1590,7 +1591,8 @@ const DEFORMATION_COMPONENT_ASSETS = {
   uniform: { src: "/assets/force-story/scene/12.png", sourceWidth: 3240, beamX0: 141, beamXB: 2963, beamY: 590 },
   fyb: { src: "/assets/force-story/scene/13.png", sourceWidth: 3240, beamX0: 114, beamXB: 2963, beamY: 335 },
 };
-const THEORETICAL_FYB_RATIO = 3 / 8;
+// 内部值 r 对应 FyB = 2r kN；4r − 4.5 = 0。曲线按新真解归一化，避免三倍响应挤出版面。
+const THEORETICAL_FYB_RATIO = 9 / 8;
 const deformationComponentImages = {};
 
 function drawDecompositionStructure(canvas, mode, r, optionsHeat = null) {
@@ -1833,7 +1835,7 @@ function drawForceCurve(canvas, r, type, system, mode = "combined", optionsHeat 
     : layout[baselineKey];
   const x0 = type === "moment" ? layout.momentX0 : layout.shearX0;
   const xB = type === "moment" ? layout.momentXB : layout.shearXB;
-  const scale = type === "moment" ? layout.momentScale : layout.shearScale;
+  const scale = (type === "moment" ? layout.momentScale : layout.shearScale) / (optionsHeat?.responseHeat === loadCurveResponseHeat ? 1 : 3);
   // 屏幕 y 向下：只翻转绘图方向，力矩数值及符号保持原约定。
   const direction = type === "moment" ? -layout.momentDirection : 1;
   const color = customConfig
@@ -2151,7 +2153,7 @@ function createDeformationLayoutEditor(step) {
     return `<label class="layout-control"><span>${label}<output data-d-numeric-output="${key}"></output></span><input data-d-numeric="${key}" type="range" min="${min}" max="${effectiveMax}" step="${increment}" value="${stepConfig.numeric[key]}"/><input class="layout-number" data-d-numeric="${key}" type="number" min="${min}" max="${effectiveMax}" step="${increment}" value="${stepConfig.numeric[key]}"/></label>`;
   }).join("");
   const topDeformationHtml = step === 4
-    ? `<section><h3>上排固定真解曲线（<i>F</i><sub><i>yB</i></sub> = 0.75 kN）</h3><p class="hint">该曲线不响应滑块，仅调整显示位置与大小。</p>${TOP_DEFORMATION_EDITOR_NUMERIC.map(([label, key, min, max, increment]) => `<label class="layout-control"><span>${label}<output data-d-numeric-output="${key}"></output></span><input data-d-numeric="${key}" type="range" min="${min}" max="${max}" step="${increment}" value="${stepConfig.numeric[key]}"/><input class="layout-number" data-d-numeric="${key}" type="number" min="${min}" max="${max}" step="${increment}" value="${stepConfig.numeric[key]}"/></label>`).join("")}</section>`
+    ? `<section><h3>上排固定真解曲线（<i>F</i><sub><i>yB</i></sub> = 2.25 kN）</h3><p class="hint">该曲线不响应滑块，仅调整显示位置与大小。</p>${TOP_DEFORMATION_EDITOR_NUMERIC.map(([label, key, min, max, increment]) => `<label class="layout-control"><span>${label}<output data-d-numeric-output="${key}"></output></span><input data-d-numeric="${key}" type="range" min="${min}" max="${max}" step="${increment}" value="${stepConfig.numeric[key]}"/><input class="layout-number" data-d-numeric="${key}" type="number" min="${min}" max="${max}" step="${increment}" value="${stepConfig.numeric[key]}"/></label>`).join("")}</section>`
     : "";
   const formulaHtml = step >= 2 ? `<section><h3>变形公式：X、Y、Scale、颜色</h3>${[["X", "x", 0, 1200, 1], ["Y", "y", 0, 1000, 1], ["Scale", "scale", .2, 3, .01]].map(([label, key, min, max, increment]) => `<label class="layout-control"><span>${label}<output data-d-formula-output="${key}"></output></span><input data-d-formula="${key}" type="range" min="${min}" max="${max}" step="${increment}" value="${stepConfig.formula[key]}"/><input class="layout-number" data-d-formula="${key}" type="number" min="${min}" max="${max}" step="${increment}" value="${stepConfig.formula[key]}"/></label>`).join("")}<div class="style-grid"><label>公式颜色<input type="color" data-d-formula-color value="${stepConfig.formula.color}"/></label></div></section>` : "";
   editor.innerHTML = `<header><div><strong>03-${step} 版面调试</strong><small>四图独立配置，拖动即预览</small></div><div class="layout-editor-header-actions"><button class="secondary compact-button" id="closeLayoutEditor">关闭</button><button class="secondary compact-button" id="collapseLayoutEditor">收起</button></div></header><div class="layout-editor-body"><section><h3>四个图片：X、Y、Scale</h3>${Object.entries(DEFORMATION_EDITOR_ELEMENTS).map(([slot, label]) => deformationElementEditorHtml(stepConfig, slot, label)).join("")}</section><section><h3>弯矩图与下排变形曲线</h3>${numericHtml}<div class="style-grid"><label>弯矩方向<select data-d-style="momentDirection"><option value="1">当前方向</option><option value="-1">反向</option></select></label><label>上排颜色<input type="color" data-d-style="topColor"/></label><label>下排颜色<input type="color" data-d-style="bottomColor"/></label><label>弯矩图线型<select data-d-style="momentLineStyle"><option value="solid">实线</option><option value="dashed">虚线</option><option value="dotted">点线</option></select></label><label>变形曲线线型<select data-d-style="deformationLineStyle"><option value="solid">实线</option><option value="dashed">虚线</option><option value="dotted">点线</option></select></label><label>填充透明度<input data-d-style="fillOpacity" type="number" min="0" max="0.8" step="0.01"/></label></div></section>${topDeformationHtml}${formulaHtml}<section><h3>动态标注：X、Y、Scale</h3>${Object.entries(DEFORMATION_EDITOR_LABELS).map(([slot, label]) => deformationLabelEditorHtml(stepConfig, slot, label)).join("")}</section><section><h3>替换四张图片</h3>${Object.entries(DEFORMATION_EDITOR_ELEMENTS).map(([slot, label]) => `<label class="asset-upload"><span>${label}</span><input type="file" accept=".svg,.png,image/svg+xml,image/png" data-d-upload="${slot}"/></label>`).join("")}</section><div class="layout-editor-actions"><button class="primary" id="saveLayoutEditor">保存03-${step}版面</button><button class="secondary" id="backupLayoutEditor">备份配置文件</button></div></div>`;
