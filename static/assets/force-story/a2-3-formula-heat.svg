@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="1268"
+   height="150"
+   viewBox="0 0 1268 150"
+   role="img"
+   version="1.1"
+   id="svg16"
+   sodipodi:docname="a2-3-formula-heat.svg"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:c2pa="http://c2pa.org/manifest">
+  <defs
+     id="defs16" />
+  <sodipodi:namedview
+     id="namedview16"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="1.2902208"
+     inkscape:cx="640.58802"
+     inkscape:cy="137.57335"
+     inkscape:window-width="1842"
+     inkscape:window-height="1057"
+     inkscape:window-x="1150"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg16" />
+  <metadata
+     id="metadata1">
+    <c2pa:manifest>AAAWgmp1bWIAAAAeanVtZGMycGEAEQAQgAAAqgA4m3EDYzJwYQAAABZcanVtYgAAAEdqdW1kYzJtYQARABCAAACqADibcQN1cm46YzJwYTpjOGFhNzk3NS1jYzAwLTRhMzItYjY0Yi02OTdjZGU1MzA0ODEAAAADl2p1bWIAAAApanVtZGMyYXMAEQAQgAAAqgA4m3EDYzJwYS5hc3NlcnRpb25zAAAAALxqdW1iAAAARGp1bWRjYm9yABEAEIAAAKoAOJtxE2MycGEuaW5ncmVkaWVudC52MwAAAAAYYzJzaKCWItc7YO0xDcJf4/w1CB8AAABwY2JvcqNpZGM6Zm9ybWF0bWltYWdlL3N2Zyt4bWxqaW5zdGFuY2VJRHgseG1wOmlpZDoxMWY5YjBkOC03NDJiLTQ2NGMtYWY1Zi1iMjI1MmZjYTkyODhscmVsYXRpb25zaGlwaHBhcmVudE9mAAAB4mp1bWIAAABBanVtZGNib3IAEQAQgAAAqgA4m3ETYzJwYS5hY3Rpb25zLnYyAAAAABhjMnNoKQO1J3uWUNZ7HzRRLNWJNQAAAZljYm9yomdhY3Rpb25zgqJmYWN0aW9ua2MycGEub3BlbmVkanBhcmFtZXRlcnOha2luZ3JlZGllbnRzgaJjdXJseC1zZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmluZ3JlZGllbnQudjNkaGFzaFggVWz2i70zd9yb2IhS+fY8tyVCxqlcQh7jRCACEnDNOhCkZmFjdGlvbngdY29tLmFudGhyb3BpYy5jbGF1ZGUucHJvdmlkZWRqcGFyYW1ldGVyc6F4H2NvbS5hbnRocm9waWMub3JpZ2luLWNvbmZpZGVuY2VndW5rbm93bmtkZXNjcmlwdGlvbnhmQ2xhdWRlIHByb3ZpZGVkIHRoaXMgZmlsZSBhdCB0aGUgcmVxdWVzdCBvZiBhIHVzZXIgYW5kIG1heSBoYXZlIGNyZWF0ZWQgb3IgbW9kaWZpZWQgdGhlIGZpbGUgY29udGVudHMubXNvZnR3YXJlQWdlbnShZG5hbWVmQ2xhdWRlcmFsbEFjdGlvbnNJbmNsdWRlZPUAAADIanVtYgAAAEBqdW1kY2JvcgARABCAAACqADibcRNjMnBhLmhhc2guZGF0YQAAAAAYYzJzaDah4J9yfPh9G/iCKOqzDkoAAACAY2JvcqVjYWxnZnNoYTI1NmNwYWRNAAAAAAAAAAAAAAAAAGRoYXNoWCAM2DPFeF7Cr2L0svgfRDTHeafn2eCokXXbDl/7G2rapWRuYW1lbmp1bWJmIG1hbmlmZXN0amV4Y2x1c2lvbnOBomVzdGFydBjKZmxlbmd0aBkeBAAAAj5qdW1iAAAAJ2p1bWRjMmNsABEAEIAAAKoAOJtxA2MycGEuY2xhaW0udjIAAAACD2Nib3KlY2FsZ2ZzaGEyNTZpc2lnbmF0dXJleE1zZWxmI2p1bWJmPS9jMnBhL3VybjpjMnBhOmM4YWE3OTc1LWNjMDAtNGEzMi1iNjRiLTY5N2NkZTUzMDQ4MS9jMnBhLnNpZ25hdHVyZWppbnN0YW5jZUlEeCx4bXA6aWlkOjAwNThhYTExLTA3ZTgtNGFjMi1iYzQ3LWVmYWFkODgwMzM0OXJjcmVhdGVkX2Fzc2VydGlvbnODomN1cmx4LXNlbGYjanVtYmY9YzJwYS5hc3NlcnRpb25zL2MycGEuaW5ncmVkaWVudC52M2RoYXNoWCBVbPaLvTN33JvYiFL59jy3JULGqVxCHuNEIAIScM06EKJjdXJseCpzZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmFjdGlvbnMudjJkaGFzaFggQVz/PAcmdr/qBANNKPop0eIstKXJQVvJ4Tleg5dqie2iY3VybHgpc2VsZiNqdW1iZj1jMnBhLmFzc2VydGlvbnMvYzJwYS5oYXNoLmRhdGFkaGFzaFgg3AiWAJzN5wlkvZpdV4JQZY0SrdSWnbMILbSgOqgkVMh0Y2xhaW1fZ2VuZXJhdG9yX2luZm+jZG5hbWVvQW50aHJvcGljIEZpbGVzZ3ZlcnNpb25lMS4wLjBrc3BlY1ZlcnNpb25lMi40LjAAABA4anVtYgAAAChqdW1kYzJjcwARABCAAACqADibcQNjMnBhLnNpZ25hdHVyZQAAABAIY2JvctKEWQISogEmGCFZAgowggIGMIIBjaADAgECAhRA5aAK7sI50L64g/oGQgU9Z1UTADAKBggqhkjOPQQDAzBJMRcwFQYDVQQKEw5BbnRocm9waWMsIFBCQzEuMCwGA1UEAxMlQW50aHJvcGljIENvbnRlbnQgQ3JlZGVudGlhbHMgUm9vdCBDQTAeFw0yNjA4MDcxODQzNTZaFw0yODA4MDYxOTQzNTZaMEQxFzAVBgNVBAoTDkFudGhyb3BpYywgUEJDMSkwJwYDVQQDEyBBbnRocm9waWMgQ2xhdWRlIENvbnRlbnQgU2lnbmluZzBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABJh6CmvLUBgFFNU0vUKlOVtE6djd17L5SuwX0LemFisBM3dkd/3cyjxFA3Qo5S46fX0/ihY0VZ7mfb9KF703t5OjWDBWMA4GA1UdDwEB/wQEAwIHgDAVBgNVHSUEDjAMBgorBgEEAYPoXgIBMAwGA1UdEwEB/wQCMAAwHwYDVR0jBBgwFoAUzlHiBIFOZFsj+OPEz5o+nMHXXMIwCgYIKoZIzj0EAwMDZwAwZAIwMXMdFJ4BetLLVY7ORuE9noqbbAZOZn/aArXyTwFAZfKrPzxF2vPoJNf1+UCdg1XGAjBwX1zd9WGqYkqmL5SFqw1QySjr1zJfpJM9+1rdDwSPLMOPOjKuiXjoU/pUUeG9RwmhY3BhZFkNngAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPZYQC28zBEGZ1HqZ9n4LjArEZ4uXniEqhwWUvvGxQU1CIMYlIi6xCjGA5GiGbZ1h8MdpY8Mjcmny9Ci+9HkVPHOo8s=</c2pa:manifest>
+  </metadata>
+  <title
+     id="title1">力法方程：l³/(3EI)·FyB + 0 + (−αΔt·l²/(2h) = −4.5 mm) = ΔB</title>
+  <text
+     x="0"
+     y="90"
+     font-family="'Microsoft YaHei', 'Noto Sans CJK SC', 'PingFang SC', sans-serif"
+     font-size="44"
+     font-weight="bold"
+     font-style="normal"
+     fill="#17221F"
+     text-anchor="start"
+     xml:space="preserve"
+     id="text1">力法方程：</text>
+  <rect
+     x="232"
+     y="6"
+     width="218"
+     height="138"
+     fill="#FFDAC7"
+     id="rect1" />
+  <text
+     x="294"
+     y="57"
+     font-family="'Times New Roman', 'Liberation Serif', Times, serif"
+     font-size="46px"
+     font-weight="normal"
+     font-style="italic"
+     fill="#008000"
+     text-anchor="middle"
+     xml:space="preserve"
+     id="text2">l<tspan
+   baseline-shift="super"
+   font-size="65%"
+   id="tspan1"
+   style="font-style:normal">3</tspan></text>
+  <line
+     x1="248"
+     y1="70"
+     x2="340"
+     y2="70"
+     stroke="#008000"
+     stroke-width="3"
+     id="line2" />
+  <text
+     x="294"
+     y="115"
+     font-family="'Times New Roman', 'Liberation Serif', Times, serif"
+     font-size="46px"
+     font-weight="normal"
+     font-style="italic"
+     fill="#008000"
+     text-anchor="middle"
+     xml:space="preserve"
+     id="text3"><tspan
+   style="font-style:normal"
+   id="tspan16">3</tspan>EI</text>
+  <text
+     x="348"
+     y="88"
+     font-family="'Times New Roman', 'Liberation Serif', Times, serif"
+     font-size="48"
+     font-weight="normal"
+     font-style="italic"
+     fill="#000000"
+     text-anchor="start"
+     xml:space="preserve"
+     id="text4">F<tspan
+   baseline-shift="sub"
+   font-size="65%"
+   font-style="normal"
+   id="tspan3">yB</tspan></text>
+  <text
+     x="472"
+     y="92"
+     font-family="'Times New Roman', 'Liberation Serif', Times, serif"
+     font-size="50"
+     font-weight="normal"
+     font-style="normal"
+     fill="#000000"
+     text-anchor="middle"
+     xml:space="preserve"
+     id="text5">+</text>
+  <rect
+     x="604.95844"
+     y="6"
+     width="493.04156"
+     height="138"
+     fill="#c6daf3"
+     id="rect5"
+     style="stroke-width:0.906497" />
+  <text
+     x="532"
+     y="90"
+     font-family="'Times New Roman', 'Liberation Serif', Times, serif"
+     font-size="48"
+     font-weight="normal"
+     font-style="normal"
+     fill="#000000"
+     text-anchor="middle"
+     xml:space="preserve"
+     id="text6">0</text>
+  <text
+     x="582"
+     y="92"
+     font-family="'Times New Roman', 'Liberation Serif', Times, serif"
+     font-size="50"
+     font-weight="normal"
+     font-style="normal"
+     fill="#000000"
+     text-anchor="middle"
+     xml:space="preserve"
+     id="text7">+</text>
+  <text
+     x="630"
+     y="116"
+     font-family="'Times New Roman', 'Liberation Serif', Times, serif"
+     font-size="112"
+     font-weight="normal"
+     font-style="normal"
+     fill="#800080"
+     text-anchor="middle"
+     xml:space="preserve"
+     id="text8">(</text>
+  <text
+     x="658"
+     y="90"
+     font-family="'Times New Roman', 'Liberation Serif', Times, serif"
+     font-size="48"
+     font-weight="bold"
+     font-style="normal"
+     fill="#800080"
+     text-anchor="middle"
+     xml:space="preserve"
+     id="text9">−</text>
+  <text
+     x="750"
+     y="57"
+     font-family="'Times New Roman', 'Liberation Serif', Times, serif"
+     font-size="46"
+     font-weight="bold"
+     font-style="italic"
+     fill="#800080"
+     text-anchor="middle"
+     xml:space="preserve"
+     id="text11">αΔ<tspan
+   baseline-shift="sub"
+   font-size="65%"
+   font-style="italic"
+   id="tspan9">t</tspan><tspan
+   dx="6"
+   id="tspan10">l</tspan><tspan
+   baseline-shift="super"
+   font-size="65%"
+   id="tspan11">2</tspan></text>
+  <line
+     x1="686"
+     y1="78"
+     x2="814"
+     y2="78"
+     stroke="#800080"
+     stroke-width="4"
+     id="line11" />
+  <text
+     x="750"
+     y="123"
+     font-family="'Times New Roman', 'Liberation Serif', Times, serif"
+     font-size="46px"
+     font-weight="bold"
+     font-style="italic"
+     fill="#800080"
+     text-anchor="middle"
+     xml:space="preserve"
+     id="text12"><tspan
+   style="font-style:normal"
+   id="tspan17">2</tspan>h</text>
+  <text
+     x="828"
+     y="90"
+     font-family="'Times New Roman', 'Liberation Serif', Times, serif"
+     font-size="46px"
+     font-weight="bold"
+     font-style="italic"
+     fill="#800080"
+     text-anchor="start"
+     xml:space="preserve"
+     id="text13">= <tspan
+   style="font-style:normal"
+   id="tspan18">−4.5 mm</tspan></text>
+  <text
+     x="1070"
+     y="116"
+     font-family="'Times New Roman', 'Liberation Serif', Times, serif"
+     font-size="112"
+     font-weight="normal"
+     font-style="normal"
+     fill="#800080"
+     text-anchor="middle"
+     xml:space="preserve"
+     id="text14">)</text>
+  <text
+     x="1124"
+     y="92"
+     font-family="'Times New Roman', 'Liberation Serif', Times, serif"
+     font-size="50"
+     font-weight="normal"
+     font-style="normal"
+     fill="#000000"
+     text-anchor="middle"
+     xml:space="preserve"
+     id="text15">=</text>
+  <rect
+     x="1152"
+     y="6"
+     width="98"
+     height="138"
+     fill="#F2F2F2"
+     id="rect15" />
+  <text
+     x="1201"
+     y="90"
+     font-family="'Times New Roman', 'Liberation Serif', Times, serif"
+     font-size="48"
+     font-weight="normal"
+     font-style="normal"
+     fill="#000000"
+     text-anchor="middle"
+     xml:space="preserve"
+     id="text16">Δ<tspan
+   baseline-shift="sub"
+   font-size="65%"
+   font-style="normal"
+   id="tspan15">B</tspan></text>
+</svg>

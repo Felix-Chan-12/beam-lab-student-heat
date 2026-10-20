@@ -10,7 +10,7 @@
  *   student.html          学生页：套用保存的版面。手机上（宽度 <700px）先继承教师版宽屏档的画布排布，再套用手机版面。
  *   student-edit.html     （或 student.html?edit=1）在电脑上按手机尺寸调 student.html 的手机版面。
  *
- * 页面内容的调整按「页」保存（00 等待、01 E、01 E 反馈、A1-0…A1-5、A2-0…A2-4、04 M），可选「只改本页 / 同组通用 /
+ * 页面内容的调整按「页」保存（00 等待、01 E、01 E 反馈、A1-0…A1-4、A2-0…A2-4、04 M），可选「只改本页 / 同组通用 /
  * 所有页通用」；并按宽度分档（宽屏 ≥1300px、中屏 1000–1299px、窄屏 700–999px；手机 <700px 只对 student.html）。
  */
 (function () {
@@ -77,8 +77,8 @@
   const PHONE_AUTO = true;
   const REPLICA_KINDS = new Set(["abs", "abstext", "arrow", "bar", "label", "figureFormula"]); // 画布里的元素：教师版的调整全部照搬
   const CANVAS_PAGE = /^A[12]-\d$/; // A1、A2 各页
-  // heat：A1-4、A1-5、A2-1、A2-2 使用整图，画布收起，不量也不照搬。
-  const FIGURE_PAGES_HEAT = new Set(["A1-4", "A1-5", "A2-1", "A2-2"]);
+  // heat：A1-4、A2-0、A2-1、A2-2 使用整图，画布收起，不量也不照搬。
+  const FIGURE_PAGES_HEAT = new Set(["A1-4", "A2-0", "A2-1", "A2-2"]);
   const isCanvasPage = (key) => CANVAS_PAGE.test(String(key)) && !FIGURE_PAGES_HEAT.has(String(key)); // 有画布的页
   const PHONE_DEVICES = [
     { key: "iphone15", label: "iPhone 14 / 15（390×844）", w: 390, h: 844 },
@@ -94,21 +94,20 @@
     ["A1-0", "02 A1-0 先看原结构的受力"],
     ["A1-1", "02 A1-1 切开竖向链杆"],
     ["A1-2", "02 A1-2 用力保留链杆作用"],
-    ["A1-3", "02 A1-3 比较切开前后内力图"],
-    ["A1-4", "02 A1-4 力法方程：位移协调"],
-    ["A1-5", "02 A1-5 FyB 引起的位移"],
-    ["A2-0", "03 A2-0 荷载／温度对照"],
-    ["A2-1", "03 A2-1 弯曲变形的两个来源"],
-    ["A2-2", "03 A2-2 温度单独作用"],
-    ["A2-3", "03 A2-3 叠加 · AI 辅助计算"],
+    ["A1-3", "02 A1-3 列力法方程"],
+    ["A1-4", "02 A1-4 力法方程逐项检查（四个圆球）"],
+    ["A2-0", "03 A2-0 荷载作用：图乘"],
+    ["A2-1", "03 A2-1 温度作用：图乘 · AI 生成变形"],
+    ["A2-2", "03 A2-2 弯曲变形的两个来源"],
+    ["A2-3", "03 A2-3 叠加：力法方程"],
     ["A2-4", "03 A2-4 B 点位移表达式"],
     ["M", "04 M 迁移拓展"],
   ];
   const PHONE_PAGES = PAGES.filter(([key]) => key !== "WAIT"); // 学生页没有「等待」页
-  // 「同组通用」的分组：E（投票、反馈两页）；A1-0～A1-4（受力图）；A1-5～A2-4（变形图）。
+  // 「同组通用」的分组：E（投票、反馈两页）；A1-0～A1-4（受力图）；A2-0～A2-4（变形图）。
   // 组名沿用 A1、A2（文件里的 G:A1、G:A2），原来按组调的版面仍然落在同一套画面上。
-  const GROUPS = { E: "01 E 两页", A1: "A1-0～A1-4 受力图", A2: "A1-5～A2-4 变形图" };
-  const groupOf = (pageKey) => (pageKey === "E" || pageKey === "E-FB" ? "E" : /^A1-[0-4]$/.test(pageKey) ? "A1" : /^A1-5$|^A2-/.test(pageKey) ? "A2" : "");
+  const GROUPS = { E: "01 E 两页", A1: "A1-0～A1-4 受力图", A2: "A2-0～A2-4 变形图" };
+  const groupOf = (pageKey) => (pageKey === "E" || pageKey === "E-FB" ? "E" : /^A1-[0-4]$/.test(pageKey) ? "A1" : /^A2-/.test(pageKey) ? "A2" : "");
   // 同一元素在几个范围里都有调整时：本页 > 同组 > 所有页（控制台：当前视图 > 两种视图通用）。
   const bucketRank = (key) => (key === "ALL" || key === "CONSOLE" ? 0 : key.startsWith("G:") ? 1 : 2);
 
@@ -130,6 +129,8 @@
     gap: { label: "内部间距", unit: "px", min: 0, max: 300, step: 1, digits: 0 },
     order: { label: "排列顺序", unit: "", min: -5, max: 5, step: 1, digits: 0 },
     text: { label: "文字大小", unit: "%", min: 30, max: 300, step: 1, digits: 0 },
+    // 文字颜色：存成 0xRRGGBB 整数（和其它数值一样存、一样撤销），窗口里用取色框。
+    color: { label: "文字颜色", unit: "", min: 0, max: 16777215, step: 1, digits: 0 },
     formulaX: { label: "图内 X 坐标", unit: "px", min: -1000, max: 6200, step: 1, digits: 1 },
     formulaY: { label: "图内 Y 坐标", unit: "px", min: -500, max: 2200, step: 1, digits: 1 },
     formulaScale: { label: "公式大小", unit: "%", min: 10, max: 400, step: 1, digits: 1 },
@@ -166,14 +167,14 @@
     comp: ["colR", "gap", "mt", "mb"],
     canvas: ["ar", "width", "x", "y", "mt", "text"],
     abs: ["x", "y", "w"],
-    abstext: ["x", "y", "w", "text"],
+    abstext: ["x", "y", "w", "text", "color"],
     label: ["dx", "dy", "text"],
     arrow: ["x", "y", "hh"],
     bar: ["x", "y", "w"],
     group: ["x", "y", "wpx", "hpx", "mt", "mb", "gap", "order", "text"],
     box: ["x", "y", "wpx", "hpx", "pt", "px", "pb", "mt", "mb", "order", "text"],
     row: ["minH", "gap", "text"],
-    text: ["x", "y", "wpx", "hpx", "mt", "mb", "order", "text"],
+    text: ["x", "y", "wpx", "hpx", "mt", "mb", "order", "text", "color"],
     circle: ["x", "y", "size", "mt", "mb", "order", "text"],
     fpanel: ["hpx"],
     guard: ["gsize"],
@@ -185,7 +186,7 @@
   const INHERIT_PROPS = {
     canvas: ["ar"],
     abs: ["left", "top", "width"],
-    abstext: ["left", "top", "width", "text"],
+    abstext: ["left", "top", "width", "text", "color"],
     arrow: ["left", "top", "h"],
     bar: ["left", "top", "width"],
     label: ["text"],
@@ -312,12 +313,21 @@
     { key: "methodStepsHeat", label: "「力法步骤」框", sel: "#app .method-steps-heat", kind: "box" },
     { key: "methodStepsTitleHeat", label: "「力法步骤」标题", sel: "#app .method-steps-heat > h2", kind: "text" },
     { key: "calculationParametersHeat", label: "计算参数（整体）", sel: "#app [data-calculation-parameters-heat]", kind: "group" },
-    { key: "methodStripHeat", label: "A1-4 顺序示意图", sel: '#app [data-step-figure-heat="methodStrip"]', kind: "box" },
-    { key: "fybDisplacementHeat", label: "A1-5 FyB 位移图", sel: '#app [data-step-figure-heat="fybDisplacement"]', kind: "box" },
-    { key: "bendSourcesHeat", label: "A2-1 弯曲变形的两个来源", sel: '#app [data-step-figure-heat="bendSources"]', kind: "box" },
-    { key: "thermalDisplacementHeat", label: "A2-2 温度位移图", sel: '#app [data-step-figure-heat="thermalDisplacement"]', kind: "box" },
-    { key: "fybFormulaHeat", label: "绿色 FyB 位移公式", sel: '#app [data-figure-formula-heat="fyb"]', kind: "figureFormula" },
-    { key: "thermalFormulaHeat", label: "紫色温度位移公式", sel: '#app [data-figure-formula-heat="thermal"]', kind: "figureFormula" },
+    { key: "arrowLabelLeftHeat", label: "箭头左侧「内力等效」", sel: '#app [data-arrow-label-heat="left"]', kind: "abstext" },
+    { key: "arrowLabelRightHeat", label: "箭头右侧「变形协调」", sel: '#app [data-arrow-label-heat="right"]', kind: "abstext" },
+    { key: "a13EquationHeat", label: "A1-3 力法方程（整块）", sel: "#app .force-free-canvas > [data-a13-equation-heat]", kind: "abs" },
+    { key: "a13EquationTitleHeat", label: "A1-3「力法方程」", sel: "#app .a13-equation-title-heat", kind: "text" },
+    { key: "a13EquationTermsHeat", label: "A1-3 方程三项（文字大小）", sel: "#app .a13-equation-row-heat", kind: "text" },
+    { key: "methodStripHeat", label: "A1-4 整图（外框）", sel: '#app [data-step-figure-heat="methodStrip"]', kind: "box" },
+    { key: "methodEquationTitleHeat", label: "A1-4「力法方程」", sel: "#app .method-equation-title-heat", kind: "text" },
+    { key: "methodStepperHeat", label: "A1-4 四个圆球", sel: "#app [data-method-stepper-heat]", kind: "box" },
+    { key: "loadIntegrationHeat", label: "A2-0 荷载作用图乘图", sel: '#app [data-step-figure-heat="loadIntegration"]', kind: "box" },
+    { key: "thermalIntegrationHeat", label: "A2-1 温度作用图乘图", sel: '#app [data-step-figure-heat="thermalIntegration"]', kind: "box" },
+    { key: "bendSourcesHeat", label: "A2-2 弯曲变形的两个来源", sel: '#app [data-step-figure-heat="bendSources"]', kind: "box" },
+    { key: "revealCardHeat", label: "A2-0／A2-1 三个圆球卡片", sel: "#app .reveal-card-heat", kind: "panel" },
+    { key: "bendStepperHeat", label: "A2-2 圆球", sel: '#app [data-step-figure-heat="bendSources"] > [data-reveal-stepper-heat]', kind: "box" },
+    { key: "ccCardHeat", label: "A2-4 五个圆球卡片", sel: "#app .cc-card-heat", kind: "panel" },
+    { key: "ccSlidesHeat", label: "A2-4 示意图（cc-slide）", sel: "#app [data-cc-slides-heat]", kind: "box" },
     { key: "tfStory", label: "M：整块面板", sel: "#app > .transfer-story", kind: "panel" },
     { key: "tfHead", label: "M：题目区", sel: "#app .transfer-head", kind: "group" },
     { key: "tfTitle", label: "M：题目", sel: "#app .transfer-head h1", kind: "text" },
@@ -348,7 +358,7 @@
   // 默认应用范围：各页都有的「外框、标题、右侧控制栏」默认所有页通用；「力法步骤」框（A1-1～A1-5，跨受力图、变形图两组）
   // 也默认所有页通用；E 阶段的两栏默认 E 两页通用；画布里的图和标注各页排布不同，默认只改本页。选中元素后可以随时改。
   const ALL_SCOPE_KEYS = new Set(["main", "story", "storyTitle", "composition", "controls", "controlCard", "aiCard", "rangeRow", "specials", "readouts", "readoutBoxes", "hint", "methodStepsHeat", "methodStepsTitleHeat"]);
-  const GROUP_SCOPE_KEYS = new Set(["hero", "leftPanel", "leftTitle", "options", "optionAll", "submitRow", "voteInput", "voteSubmit", "fbSummary", "fbTotal", "fbBars", "fbComments", "rightPanel", "rightTitle", "rightSubtitle", "rightLead", "equations", "candidates", "candidateRows", "symbolNotes"]);
+  const GROUP_SCOPE_KEYS = new Set(["arrowLabelLeftHeat", "arrowLabelRightHeat", "hero", "leftPanel", "leftTitle", "options", "optionAll", "submitRow", "voteInput", "voteSubmit", "fbSummary", "fbTotal", "fbBars", "fbComments", "rightPanel", "rightTitle", "rightSubtitle", "rightLead", "equations", "candidates", "candidateRows", "symbolNotes"]);
   PAGE_REGISTRY.forEach((def) => { def.scope = ALL_SCOPE_KEYS.has(def.key) ? "all" : GROUP_SCOPE_KEYS.has(def.key) ? "group" : "page"; });
 
   // 学生页（手机）独有的顶部栏与导航。
@@ -457,8 +467,9 @@
   //   第 1 次（pageMapHeat 1 → 2）：A1 加了 A1-4；A2 去掉原 A2-0，对照单独成 A2-2，加了 A2-3。
   //   第 2 次（pageMapHeat 2 → 3）：原 A2-0、A2-1 并进 A1（A1-5、A1-6），其余 A2 往前挪两个（A2-0～A2-4）。
   //   第 3 次（pageMapHeat 3 → 4）：删除原 A1-5，原 A1-6 的调整保留到新 A1-5。
-  // 没有 pageMapHeat 的算第 1 版。已经是 4 的不再改。
-  const PAGE_MAP_HEAT = 4;
+  //   第 4 次（pageMapHeat 4 → 5，2026-10-20）：删除 A1-5；A1-3 改成沿用 A1-2 的画面，A1-3 的调整换成 A1-2 的（标题的调整保留）。
+  // 没有 pageMapHeat 的算第 1 版。已经是 5 的不再改。
+  const PAGE_MAP_HEAT = 5;
   const PAGE_RENAMES_HEAT = {
     2: {
       "A2-0": null, "A2-1": "A2-0", "A2-2": "A2-1", "A2-3-compareHeat": "A2-2",
@@ -466,6 +477,7 @@
     },
     3: { "A2-0": "A1-5", "A2-1": "A1-6", "A2-2": "A2-0", "A2-3": "A2-1", "A2-4": "A2-2", "A2-5": "A2-3", "A2-6": "A2-4" },
     4: { "A1-5": null, "A1-6": "A1-5" },
+    5: { "A1-5": null },
   };
   function migratePageKeysHeat(raw) {
     if (!raw || typeof raw !== "object") return raw;
@@ -492,6 +504,16 @@
         out.canvas.pages = rename(old);
         // 第 1 次：原 A2-3 的画布同时给 A2-2（对照）和 A2-4
         if (to === 2 && old["A2-3"] && !out.canvas.pages["A2-2"]) out.canvas.pages["A2-2"] = old["A2-3"];
+        if (to === 5 && out.canvas.pages["A1-2"]) out.canvas.pages["A1-3"] = clone(out.canvas.pages["A1-2"]);
+      }
+      // 第 4 次：A1-3 用 A1-2 的调整（只保留 A1-3 自己的标题调整）
+      if (to === 5 && out.regimes && typeof out.regimes === "object") {
+        for (const pages of Object.values(out.regimes)) {
+          if (!pages || typeof pages !== "object") continue;
+          const title = pages["A1-3"] && pages["A1-3"].storyTitle;
+          if (pages["A1-2"]) pages["A1-3"] = clone(pages["A1-2"]); else delete pages["A1-3"];
+          if (title) (pages["A1-3"] ||= {}).storyTitle = title;
+        }
       }
     }
     out.pageMapHeat = PAGE_MAP_HEAT;
@@ -691,6 +713,7 @@
     if (p.heroL != null) d.push(`grid-template-columns: minmax(0, ${p.heroL}fr) minmax(0, ${round(100 - p.heroL, 2)}fr)${I}`);
     if (p.minH != null) d.push(`min-height: ${p.minH}px${I}`);
     if (p.gsize != null) d.push(`--fr-guard-b: ${p.gsize}px${I}`);
+    if (p.color != null) d.push(`color: #${Math.max(0, Math.min(16777215, Math.round(p.color))).toString(16).padStart(6, "0")}${I}`);
     if (p.formulaX != null) d.push(`--heat-formula-x: ${p.formulaX}px${I}`);
     if (p.formulaY != null) d.push(`--heat-formula-y: ${p.formulaY}px${I}`);
     if (p.formulaScale != null) d.push(`--heat-formula-scale: ${round(p.formulaScale / 100, 4)}${I}`);
@@ -894,7 +917,7 @@
     const stage = Number(state.stage || 0);
     if (stage === 0) return "WAIT";
     if (stage === 1) return state.vote_feedback_visible ? "E-FB" : "E";
-    if (stage === 2) return `A1-${Math.max(0, Math.min(5, Number(state.force_reveal_step || 0)))}`;
+    if (stage === 2) return `A1-${Math.max(0, Math.min(4, Number(state.force_reveal_step || 0)))}`;
     // A2-5（只在教师端）的页面框里是 01 阶段的投票页：用 E 投票页的版面（在 E 页调的，A2-5 跟着变）。
     if (stage === 3) {
       if (Number(state.deformation_reveal_step || 0) === 5) return "E";
@@ -938,6 +961,7 @@
     return list;
   }
   function applyContent() {
+    applyVoteOptionsHeat();
     const texts = new Map();
     for (const { entry } of layeredEntries(activeData, currentRegime(), contentKeys())) {
       if (typeof entry.text !== "string") continue;
@@ -963,6 +987,25 @@
       if (!el || texts.has(el)) return;
       if (originalHtml.has(el)) el.innerHTML = originalHtml.get(el); else mark.remove();
     });
+  }
+  // heat 10-21：E 页 A/B/C 选项改过的文字交给 app.js（window.BEAM_VOTE_OPTION_TEXTS），E 投票反馈页的票数条跟着变。
+  let appliedVoteOptions;
+  function applyVoteOptionsHeat() {
+    const VOTE_OPTION_SELS_HEAT = {
+      agree: '#app button[data-vote="agree"] > span',
+      doubt: '#app button[data-vote="doubt"] > span',
+      unsure: '#app button[data-vote="unsure"] > span',
+    };
+    const texts = {};
+    for (const { entry } of layeredEntries(activeData, currentRegime() || "wide", bucketKeysFor("E"))) {
+      if (typeof entry.text !== "string") continue;
+      Object.entries(VOTE_OPTION_SELS_HEAT).forEach(([key, sel]) => { if (entry.sel === sel) texts[key] = entry.text; });
+    }
+    const sig = canon(texts);
+    if (sig === appliedVoteOptions) return;
+    appliedVoteOptions = sig;
+    window.BEAM_VOTE_OPTION_TEXTS = texts;
+    window.dispatchEvent(new CustomEvent("beam-vote-options-changed"));
   }
   function setActiveData(data) {
     activeData = data;
@@ -1014,7 +1057,7 @@
       + "// 放在 static 文件夹里，teacher.html 和 student.html 会自动读取。\n"
       + '// "wide" "medium" "narrow" 是教师版（按宽度分档），"phone" 是学生页的手机版面。\n'
       + '// 想恢复默认版面：把 "regimes" 后面的内容改成 {}，或在版面调试里重置后再保存。\n'
-      + '// "pageMapHeat": 4 表示页号已按 2026-10-11 第三次调整后的步骤编排（A1-0～A1-5、A2-0～A2-4）；小于 4 或没有这一项的旧文件，打开时自动改到新页号。\n'
+      + '// "pageMapHeat": 5 表示页号已按 2026-10-20 的步骤编排（A1-0～A1-4、A2-0～A2-4）；小于 5 或没有这一项的旧文件，打开时自动改到新页号。\n'
       + (data.votes ? '// "votes" 是 E 投票反馈页的人数（agree = A、doubt = B、unsure = C），在版面调试里选中「人数方块」可以改。\n' : "")
       + (data.transfer ? '// "transfer" 是 M 页「学生回答」：B、C 的人数（A = 第一次投票的总人数 − B − C）和每位同学的想法，在版面调试里选中 M 页右栏可以改。\n' : "")
       + (data.comments ? '// "comments" 是 E 投票反馈页的匿名补充观点（一条一句），在版面调试里选中「匿名观点区」可以改。\n' : "")
@@ -1752,6 +1795,7 @@
         case "formulaY": return px(cs.getPropertyValue("--heat-formula-y"));
         case "formulaScale": return (parseFloat(cs.getPropertyValue("--heat-formula-scale")) || 1) * 100;
         case "frameInterval": return parseFloat(cs.getPropertyValue("--heat-frame-interval")) || 0.2;
+        case "color": { const m = String(cs.color).match(/\d+(\.\d+)?/g) || [0, 0, 0]; return (Math.round(m[0]) << 16) + (Math.round(m[1]) << 8) + Math.round(m[2]); }
         case "left": return px(cs.left) / (containerOf(node).clientWidth || 1) * 100;
         case "top": return px(cs.top) / (containerOf(node).clientHeight || 1) * 100;
         case "width": return px(cs.width) / widthBasis(def, node) * 100;
@@ -1796,7 +1840,6 @@
       const parentDisplay = node.parentElement ? getComputedStyle(node.parentElement).display : "";
       const mode = posMode(def);
       let list = KIND_PROPS[def.kind] || KIND_PROPS.box;
-      if (def.key === "methodStripHeat") list = ["frameInterval", ...list];
       // 一次调好几个（或跟着数值移动的标注）时，用偏移量，不用坐标。
       if (mode === "offset") list = list.map((p) => (p === "x" ? "dx" : p === "y" ? "dy" : p));
       return list.filter((prop) => {
@@ -2065,7 +2108,6 @@
           const level = editLevel(def);
           const group = nodes.length > 1 ? `<span class="badge">共 ${nodes.length} 个，一起调整</span>` : "";
           let tip = KIND_TIPS[def.kind] ? `<p class="hint">${KIND_TIPS[def.kind]}</p>` : "";
-          if (def.key === "methodStripHeat") tip += '<p class="hint">每张显示时间默认 0.2 秒；修改后会重新播放，依次显示四张并停在最后一张。</p>';
           if (ctx.kind === "console" && frameOn() && def.key === "c:main") tip += '<p class="hint inherit">带外框时：控制台主体就是屏幕，外框跟着它走。改宽度就是改屏幕宽度（放大预览里，学生预览的页面也会跟着变宽或变窄）。</p>';
           if (def.kind === "canvas") {
             const mainDef = ctx.registry.find((d) => d.kind === "main");
@@ -2114,6 +2156,16 @@
     }
     function rowHtml(def, prop) {
       const meta = PROPS[prop];
+      if (prop === "color") {
+        return `<div class="prop" data-prop="color">
+        <span class="name">${meta.label}</span>
+        <input type="color" class="color-pick">
+        <input type="range" min="${meta.min}" max="${meta.max}" step="1" hidden>
+        <input type="number" step="1" hidden>
+        <span class="unit"></span>
+        <button class="reset" data-reset="color" title="恢复默认" disabled>↺</button>
+      </div>`;
+      }
       return `<div class="prop" data-prop="${prop}">
         <span class="name">${meta.label}</span>
         <input type="range" min="${meta.min}" max="${meta.max}" step="${meta.step}">
@@ -2145,6 +2197,8 @@
         if (value > Number(range.max)) range.max = String(Math.ceil(value));
         if (root.activeElement !== range) range.value = String(value);
         if (root.activeElement !== number) number.value = String(round(value, meta.digits));
+        const picker = row.querySelector('input[type="color"]');
+        if (picker && root.activeElement !== picker) picker.value = `#${Math.max(0, Math.round(value)).toString(16).padStart(6, "0").slice(-6)}`;
         const vote = VOTE_PROPS[prop];
         const tf = TRANSFER_PROPS[prop];
         const own = vote ? currentVotes()[vote] !== defaultVotes()[vote] : tf ? currentTransfer()[tf] !== defaultTransfer()[tf] : ownProp(def, prop);
@@ -2770,6 +2824,7 @@
       }
       const row = event.target.closest(".prop");
       if (!row || !selected) return;
+      if (event.target.type === "color") { setProp(selected.def, "color", parseInt(event.target.value.slice(1), 16)); return; }
       const value = Number(event.target.value);
       if (event.target.value === "" || !Number.isFinite(value)) return;
       setProp(selected.def, row.dataset.prop, value);

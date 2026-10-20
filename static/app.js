@@ -13,8 +13,8 @@ const isPreview = role === "student" && searchParams.get("preview") === "1";
 const isSelfGuidedStudent = offlineMode && role === "student" && !isPreview && offlineRuntime.selfGuided === true;
 // A2 的最后一步：教师端（和它的学生预览）多一步 A2-5，页面框里显示 01 阶段的投票页；学生手机是 A2-0～A2-4。
 const A2_LAST_STEP = role === "teacher" || isPreview ? 5 : 4;
-// heat：A1 共 A1-0～A1-5；A1-4 依次显示四张协调图，A1-5 在最后一张图上显示 FyB 位移公式。
-const A1_LAST_STEP_HEAT = 5;
+// heat：A1 共 A1-0～A1-4（原 A1-5 已删去）。A1-3 沿用 A1-2 的画面并加力法方程；A1-4 用四个圆球逐项显示三张协调图。
+const A1_LAST_STEP_HEAT = 4;
 const A1_FORCE_LAST_STEP_HEAT = 4;
 const layoutTeacherToken = searchParams.get("teacher_token") || "";
 const layoutMode = isPreview && (
@@ -154,7 +154,6 @@ const DEFORMATION_LABEL_MAP = {
 // 状态里存新步号；判断怎么画时换成 d（a2StepHeat）和原步号（a2LegacyStepHeat），原来的画法和数值一处不变。
 const A2_LEGACY_STEPS_HEAT = [1, 2, 3, 3, 3, 4, 5];
 const A2_COMPARE_STEP_HEAT = 2;
-const A2_BEND_SOURCES_STEP_HEAT = 3;
 // 当前是变形图第几页：A1-5 → 1；A2-0～A2-4 → 2～6。
 function a2StepHeat(state = currentState) {
   if (Number(state?.stage) === 2) return 1;
@@ -561,38 +560,18 @@ function renderVote(a2Page = false) {
       <button class="option" data-vote="unsure" aria-pressed="false"><strong>C</strong><span>不一定在这三组里</span></button>
     </div>
     <p class="vote-status" id="voteStatus"></p>
-    <div class="vote-submit-row"><input id="voteComment" type="text" maxlength="80" aria-label="补充你的想法（选填）" placeholder="补充你的想法（选填）"/><button class="primary" id="submitVote" disabled>提交</button></div>`, `<h2>平衡条件与三组候选解</h2>
-      <div class="formula equilibrium-system">
-        <div>∑ F<sub>x</sub> = 0　 <span class="eq-blue">F<sub>xA</sub></span> = 0</div>
-        <div>∑ F<sub>y</sub> = 0　 <span class="eq-blue">F<sub>yA</sub></span> + <span class="eq-red">F<sub>yB</sub></span> = 0</div>
-        <div>∑ M = 0　 <span class="eq-blue">M<sub>A</sub></span> + <span class="eq-red">F<sub>yB</sub></span> · l = 0</div>
+    <div class="vote-submit-row"><input id="voteComment" type="text" maxlength="80" aria-label="补充你的想法（选填）" placeholder="补充你的想法（选填）"/><button class="primary" id="submitVote" disabled>提交</button></div>`, `<h2>静力平衡方程</h2>
+      <div class="heat-equilibrium" aria-label="静力平衡方程，方程中的每一项均与温度变化无关">
+        <div>∑ F<sub>x</sub> = 0</div><div><span class="eq-blue">F<sub>xA</sub></span> = 0</div>
+        <div>∑ F<sub>y</sub> = 0</div><div class="heat-equilibrium-focus"><span class="eq-blue">F<sub>yA</sub></span> + <span class="eq-red">F<sub>yB</sub></span> = 0</div>
+        <div>∑ M = 0</div><div class="heat-equilibrium-focus"><span class="eq-blue">M<sub>A</sub></span> + <span class="eq-red">F<sub>yB</sub></span> · l = 0</div>
       </div>
-      <div class="candidate-solutions">
-        <div class="candidate-heading"><span>三组平衡候选</span><span><span class="eq-blue">F<sub>xA</sub></span> = 0</span></div>
-        <div class="candidate-row">
-          <span><span class="eq-red">F<sub>yB</sub></span> = 0</span>
-          <span><span class="eq-blue">F<sub>yA</sub></span> = 0</span>
-          <span><span class="eq-blue">M<sub>A</sub></span> = 0</span>
-        </div>
-        <div class="candidate-row">
-          <span><span class="eq-red">F<sub>yB</sub></span> = 0.5 kN</span>
-          <span><span class="eq-blue">F<sub>yA</sub></span> = −0.5 kN</span>
-          <span><span class="eq-blue">M<sub>A</sub></span> = −1.5 kN·m</span>
-        </div>
-        <div class="candidate-row">
-          <span><span class="eq-red">F<sub>yB</sub></span> = 1 kN</span>
-          <span><span class="eq-blue">F<sub>yA</sub></span> = −1 kN</span>
-          <span><span class="eq-blue">M<sub>A</sub></span> = −3 kN·m</span>
-        </div>
+      <div class="heat-temperature-explanation">
+        <svg class="heat-temperature-arrow" viewBox="0 0 70 270" aria-hidden="true"><path d="M27 2 H43 V229 H61 L35 266 L9 229 H27 Z" fill="white" stroke="black" stroke-width="2"/></svg>
+        <p>方程中的<br>每一项<br>均与温度<br>变化无关</p>
       </div>
-      <div class="symbol-notes" aria-label="符号说明">
-        <p>Δ<i>t</i>：上下表面温差　l：梁长</p>
-        <p>F<sub>xA</sub>：A点水平（x向）支反力</p>
-        <p>F<sub>yA</sub>、F<sub>yB</sub>：A、B点竖向（y向）支反力</p>
-        <p>M<sub>A</sub>：A点支座反力矩</p>
-        <p>∑F<sub>x</sub>、∑F<sub>y</sub>：水平（x向）、竖直（y向）各力的代数和</p>
-        <p>∑M：各力对同一取矩点的力矩代数和</p>
-      </div>`);
+      <img class="heat-temperature-beam" src="${runtimeUrl("/assets/force-story/rect155.png")}" alt="A端固定、B端竖向链杆约束的梁，上表面升温25摄氏度，下表面0摄氏度"/>`);
+  app.querySelector(".hero > aside.panel").classList.add("heat-vote-aside");
   let selectedVote = null;
   const voteButtons = document.querySelectorAll("[data-vote]");
   const submitVote = document.querySelector("#submitVote");
@@ -651,6 +630,7 @@ function refreshVoteSummary() {
 }
 window.addEventListener("beam-votes-changed", refreshVoteSummary);
 window.addEventListener("beam-vote-comments-changed", refreshVoteSummary);
+window.addEventListener("beam-vote-options-changed", refreshVoteSummary);
 
 function renderVoteFeedback() {
   app.innerHTML = studentShell("全班判断已经汇总", "E · 投票反馈", `
@@ -759,8 +739,14 @@ function bindForceStoryboard() {
   const sliders = Array.from(document.querySelectorAll("[data-force-slider]"));
   const refresh = (step = currentState.force_reveal_step || 0) => {
     const numericStep = Math.max(0, Math.min(Number(step), A1_FORCE_LAST_STEP_HEAT));
+    if (numericStep !== 3) a13EquationShownHeat = TUNING_PAGE_HEAT; // 每次进入 A1-3 都从没点开始（版面调试里默认显示，方便调位置）
+    // heat：A1-3 沿用 A1-2 的画面（排版、箭头、图注都按 A1-2），去掉右侧三个圆，加力法方程图；旧编辑器仍按 A1-3 显示全部元素。
+    const displayStep = numericStep === 3 && !layoutMode ? 2 : numericStep;
     const story = document.querySelector(".force-story:not(.deformation-story)");
-    if (story) story.dataset.revealStep = String(numericStep);
+    if (story) {
+      story.dataset.revealStep = String(displayStep);
+      story.dataset.a1StepHeat = String(numericStep);
+    }
     updateMethodStepsHeat(numericStep); // heat：右侧「力法步骤」
     updateStepFigureHeat(story, numericStep === 4, "methodStrip"); // heat：A1-4 三联图
     const heading = document.querySelector(".force-story:not(.deformation-story) h1");
@@ -768,7 +754,7 @@ function bindForceStoryboard() {
     sliders.forEach((slider) => { slider.value = String(x1); });
     document.querySelectorAll("[data-force-value]").forEach((value) => { value.textContent = `${formatNumberHeat(2 * x1)} kN`; });
     document.querySelectorAll("[data-force-live-value]").forEach((value) => {
-      value.innerHTML = step < 3 && ["originalFyB", "basicFyB"].includes(value.dataset.forceLabelSlot)
+      value.innerHTML = displayStep < 3 && ["originalFyB", "basicFyB"].includes(value.dataset.forceLabelSlot)
         ? '<i>F</i><sub>yB</sub> = ?'
         : formatForceValue(value.dataset.forceLiveValue, x1);
     });
@@ -784,13 +770,16 @@ function bindForceStoryboard() {
       if (element && layout) element.style.left = `${(numericStep === 3 ? forceLayout.elements.originalShearBg.x : layout.x) / FORCE_CANVAS.width * 100}%`;
     });
     const transitionArrow = story?.querySelector("[data-force-transition-arrow]");
-    if (transitionArrow) transitionArrow.hidden = numericStep !== 2;
+    if (transitionArrow) transitionArrow.hidden = displayStep !== 2;
+    story?.querySelectorAll("[data-arrow-label-heat]").forEach((label) => { label.hidden = displayStep !== 2; }); // heat：「内力等效」「变形协调」
+    const a13Equation = story?.querySelector("[data-a13-equation-heat]");
+    if (a13Equation) a13Equation.hidden = layoutMode || numericStep !== 3 || !a13EquationShownHeat; // heat：A1-3 点「2. 列力法方程」后才出现
     const compareDecorations = story?.querySelectorAll("[data-force-compare-decoration]") || [];
-    compareDecorations.forEach((element) => { element.hidden = numericStep !== 3; });
+    compareDecorations.forEach((element) => { element.hidden = displayStep !== 3; });
     const topCaption = story?.querySelector("[data-force-top-caption]");
     const bottomCaption = story?.querySelector("[data-force-bottom-caption]");
     if (topCaption) topCaption.hidden = false;
-    if (bottomCaption) bottomCaption.hidden = numericStep < 2;
+    if (bottomCaption) bottomCaption.hidden = displayStep < 2;
     // heat：回忆完力法（A1-1 起），图注后面加「（原结构）」「（基本结构）」
     story?.querySelectorAll("[data-caption-role-heat]").forEach((role) => { role.hidden = numericStep < 1; });
   };
@@ -838,8 +827,6 @@ function bindDeformationStoryboard() {
     card.querySelector('[data-force-readouts]').innerHTML = labReadouts(false, deformationBasicX1, mode)
       + (step >= 4 ? `<div class="readout displacement-readout"><strong>${formatNumberHeat(4 * x1 - 4.5)} mm</strong><small>B点位移 Δ<sub>B</sub>（向上为正）</small><small>反力位移 +${formatNumberHeat(4 * x1)} mm<br>温度位移 −4.50 mm</small></div>` : '');
     card.querySelector('.hint').innerHTML = uniform ? '温度单独作用，F<sub>yB</sub> 固定为零。' : '一个滑块共同控制上下两排。';
-    card.querySelector('[data-special-candidates]').hidden = step < 4;
-    document.querySelectorAll('[data-special-candidate]').forEach(button => button.setAttribute('aria-pressed', String(Number(button.dataset.specialCandidate) === x1)));
     document.querySelectorAll('[data-force-curve]').forEach(canvas => {
       const original = canvas.dataset.forceSystem === 'original';
       drawForceCurve(canvas, original ? x1 : deformationBasicX1, canvas.dataset.forceCurve, canvas.dataset.forceSystem, original ? 'combined' : mode);
@@ -856,7 +843,7 @@ function bindDeformationStoryboard() {
     const dimension = document.querySelector('[data-deformation-dimension]');
     const top = document.querySelector('[data-deformation-load-top]');
     const aiComputing = step === 4 && aiDeformationProgress !== null;
-    const showAiCurves = step >= 5 || (step === 4 && aiDeformationEnabled);
+    const showAiCurves = step >= 4; // heat 10-21：A2-3 也直接显示变形曲线（随 FyB 变），格式同 A2-4
     if (bottom) bottom.hidden = step === 0 || (step === 4 && !showAiCurves && !aiComputing);
     if (dimension) dimension.hidden = bottom?.hidden ?? true;
     top.hidden = true;
@@ -883,11 +870,6 @@ function bindDeformationStoryboard() {
     refresh();
   });
   slider.addEventListener('change', () => { slider.value = String(x1); api({ type: 'observe_force', x1 }); });
-  document.querySelectorAll('[data-special-candidate]').forEach(button => button.addEventListener('click', () => {
-    x1 = Number(button.dataset.specialCandidate);
-    slider.value = String(x1);
-    refresh();
-  }));
   aiButton?.addEventListener('click', () => {
     if (aiDeformationEnabled || aiButton.dataset.computing) return;
     aiButton.dataset.computing = 'true';
@@ -928,8 +910,11 @@ function bindDeformationStoryboard() {
 
 function updateForceReveal(state) {
   const step = Math.max(0, Math.min(Number(state.force_reveal_step || 0), A1_FORCE_LAST_STEP_HEAT));
+  // heat：A1-3 沿用 A1-2：内力图、滑块卡片（reveal 3）和右侧三个圆不显示。旧编辑器（layoutMode）仍显示全部。
+  const sameAsA12 = step === 3 && !layoutMode;
   document.querySelectorAll("[data-reveal]").forEach((element) => {
-    element.hidden = Number(element.dataset.reveal) > step;
+    const reveal = Number(element.dataset.reveal);
+    element.hidden = sameAsA12 ? reveal > 2 || /^concept/.test(element.dataset.elementSlot || "") : reveal > step;
   });
   if (forceStoryboardRefresh) forceStoryboardRefresh(step);
 }
@@ -1012,6 +997,12 @@ function deformationFormulaHtml(step, r = deformationBasicX1) {
   const fyb = '<span class="fraction"><span><i>l</i><sup>3</sup></span><span>3<i>E</i><i>I</i></span></span><i>F</i><sub><i>yB</i></sub>';
   if (step === 2) return fyb;
   if (step === 3) return `&minus;${uniform} = &minus;4.5 mm`;
+  // heat：A2-3、A2-4 的力法方程是整张 SVG（static/assets/force-story/a2-3-formula-heat.svg、a2-4-formula-heat.svg）
+  if (step === 4 || step === 5) {
+    const name = step === 4 ? "a2-3-formula-heat.svg" : "a2-4-formula-heat.svg";
+    const alt = `力法方程：l³/(3EI)·FyB + 0 + (−αΔt·l²/(2h) = −4.5 mm) = ΔB${step === 5 ? " = 0" : ""}`;
+    return `<img class="formula-svg-heat" src="${runtimeUrl(`/assets/force-story/${name}`)}" alt="${alt}"/>`;
+  }
   const combined = `Δ<sub>B</sub> = <span class="formula-fyb-heat">${fyb}</span> + <span class="formula-thermal-heat">(&minus;${uniform} = &minus;4.5 mm)</span>`;
   if (step === 4) return combined;
   const result = `${formatNumberHeat(4 * r - 4.5)} mm`;
@@ -1031,9 +1022,9 @@ function updateDeformationReveal(state) {
   story.querySelector('h1').innerHTML = [
     '先看 <i>F</i><sub>yB</sub> 单独作用',
     '<i>F</i><sub>yB</sub> 引起的B点位移',
-    '荷载／温度对照',
+    '荷载作用下的图乘',
+    '温度作用下的图乘',
     '弯曲变形的两个来源',
-    '再看温度单独作用',
     '将温度与 <i>F</i><sub>yB</sub> 叠加起来',
     '写出B点位移的叠加表达式',
   ][stepHeat];
@@ -1048,10 +1039,22 @@ function updateDeformationReveal(state) {
   if (forceStoryboardRefresh) forceStoryboardRefresh(stepHeat);
   applyDeformationStepLayout(stepHeat);
   updateCompareViewHeat(state, stepHeat); // heat：A2-0 荷载／温度对照
-  const figureKind = Number(state.stage) === 2 ? "fybDisplacement"
-    : stepHeat === A2_BEND_SOURCES_STEP_HEAT ? "bendSources"
-    : Number(state.deformation_reveal_step) === 2 ? "thermalDisplacement" : null;
+  // heat：A2-0 荷载作用图乘、A2-1 温度作用图乘（左边换成图，右边 A2-0 空白、A2-1 是 AI 辅助计算）、A2-2 弯曲变形的两个来源（整页图）
+  const figureKind = Number(state.stage) === 3 ? (["loadIntegration", "thermalIntegration", "bendSources"][Number(state.deformation_reveal_step)] || null) : null;
   updateStepFigureHeat(story, Boolean(figureKind), figureKind);
+  const aiFigureCard = story.querySelector("[data-ai-figure-heat]");
+  if (aiFigureCard) aiFigureCard.hidden = figureKind !== "thermalIntegration";
+  if (figureKind !== "thermalIntegration") resetAiFigureHeat();
+  const revealCard = story.querySelector("[data-reveal-card-heat]");
+  if (revealCard) revealCard.hidden = !["loadIntegration", "thermalIntegration"].includes(figureKind);
+  // heat：A2-4 右侧顶部五个圆球（每次进入都从「一个都没点」开始，原画面照常）
+  const onCcPage = Number(state.stage) === 3 && Number(state.deformation_reveal_step) === 4;
+  const ccCard = story.querySelector("[data-cc-card-heat]");
+  if (ccCard) {
+    const ccStepper = ccCard.querySelector("[data-reveal-stepper-heat]");
+    if (ccStepper && (!onCcPage || ccCard.hidden)) setRevealStageHeat(ccStepper, 0);
+    ccCard.hidden = !onCcPage;
+  }
   updateMethodStepsHeat(Number(state.stage) === 2 ? Number(state.force_reveal_step || 0) : -1);
 }
 
@@ -1061,7 +1064,11 @@ function renderForce() {
     <div class="force-composition">
       <div class="force-free-canvas" aria-label="11元素自由排版画布">
         ${Object.keys(FORCE_ELEMENT_META).map(forceElementHtml).join("")}
-        <div class="force-transition-arrow" data-force-transition-arrow hidden aria-label="由超静定结构指向静定结构"></div>
+        <div class="force-transition-arrow" data-force-transition-arrow hidden aria-label="由超静定结构指向静定结构"><span class="force-arrow-label-heat" data-arrow-label-heat="left" hidden>内力等效</span><span class="force-arrow-label-heat" data-arrow-label-heat="right" hidden>变形协调</span></div>
+        <div class="a13-equation-heat" data-a13-equation-heat hidden aria-label="力法方程：δ11·FyB + Δ1P = 0">
+          <div class="a13-equation-title-heat">力法方程</div>
+          <div class="a13-equation-row-heat"><span class="a13-term-heat" data-a13-term="1"><span><i>δ</i><sub>11</sub><i>F</i><sub>yB</sub></span></span><span class="a13-op-heat">+</span><span class="a13-term-heat" data-a13-term="2"><span><i>Δ</i><sub>1P</sub></span></span><span class="a13-op-heat">=</span><span class="a13-term-heat" data-a13-term="3"><span>0</span></span></div>
+        </div>
         <div class="deformation-row-divider" data-force-compare-decoration hidden aria-hidden="true"></div>
         <div class="structure-caption top-caption force-stage-caption" data-force-top-caption hidden>未知的超静定结构<span class="caption-role-heat" data-caption-role-heat hidden>（原结构）</span></div>
         <div class="structure-caption bottom-caption force-stage-caption" data-force-bottom-caption hidden>已知的静定结构<span class="caption-role-heat" data-caption-role-heat hidden>（基本结构）</span></div>
@@ -1090,12 +1097,16 @@ function renderDeformation() {
         <div class="deformation-row-divider" data-deformation-divider hidden aria-hidden="true"></div>
         ${slots.map(forceElementHtml).join("")}<div class="structure-caption top-caption" data-structure-caption>未知的超静定结构<span class="caption-role-heat">（原结构）</span></div><div class="structure-caption bottom-caption" data-structure-caption>已知的静定结构<span class="caption-role-heat">（基本结构）</span></div>
       </div>
+      ${stepFigureHtmlHeat("loadIntegration")}
+      ${stepFigureHtmlHeat("thermalIntegration")}
       ${stepFigureHtmlHeat("bendSources")}
-      ${stepFigureHtmlHeat("fybDisplacement")}
-      ${stepFigureHtmlHeat("thermalDisplacement")}
+      ${ccSlidesHtmlHeat()}
       ${methodStepsHtmlHeat()}
       <div class="force-controls">
-        <aside class="control-card force-control"><section class="ai-deformation-card" data-ai-deformation-card hidden><div class="ai-deformation-heading"><span>AI</span><strong>辅助生成整梁变形</strong></div><button type="button" class="primary ai-deformation-button" data-ai-deformation-button>启动 AI 辅助计算</button><small data-ai-deformation-status>逐点计算 · 计算 26 个采样点位移</small></section><div class="range-row"><input data-force-slider data-force-channel="basic" type="range" min="0" max="2.5" step="0.005" value="0" aria-label="切开链杆后FyB滑块"/><strong data-force-value></strong></div><div class="special-candidates" data-special-candidates hidden><button class="secondary" data-special-candidate="0"><i>F</i><sub>yB</sub>＝0</button><button class="secondary" data-special-candidate="0.25"><i>F</i><sub>yB</sub>＝0.5 kN</button><button class="secondary" data-special-candidate="0.5"><i>F</i><sub>yB</sub>＝1 kN</button></div><div data-force-readouts></div><p class="hint">上下滑块同步，两组内力图同步变化。</p></aside>
+        <aside class="control-card cc-card-heat" data-cc-card-heat hidden>${revealStepperHtmlHeat(5, "逐张查看示意图（1～5）", "cc")}</aside>
+        <aside class="control-card force-control"><div class="range-row"><input data-force-slider data-force-channel="basic" type="range" min="0" max="2.5" step="0.005" value="0" aria-label="切开链杆后FyB滑块"/><strong data-force-value></strong></div><div data-force-readouts></div><p class="hint">上下滑块同步，两组内力图同步变化。</p></aside>
+        <aside class="control-card ai-figure-card-heat" data-ai-figure-heat hidden><section class="ai-deformation-card"><div class="ai-deformation-heading"><span>AI</span><strong>辅助生成整梁变形</strong></div><button type="button" class="primary ai-deformation-button" data-ai-figure-button>启动 AI 辅助计算</button><small data-ai-figure-status>逐点计算 · 计算 26 个采样点位移</small></section></aside>
+        <aside class="control-card reveal-card-heat" data-reveal-card-heat hidden>${revealStepperHtmlHeat(3, "逐块查看图乘（1～3）")}</aside>
       </div>
     </div>
   </section>`;
@@ -1111,6 +1122,8 @@ function renderDeformation() {
   document.querySelector(".force-free-canvas").insertAdjacentHTML("beforeend", '<div class="deformation-formula-label" data-deformation-formula hidden></div>');
   document.querySelector(".force-free-canvas").insertAdjacentHTML("beforeend", compareViewHtmlHeat()); // heat
   bindDeformationStoryboard();
+  bindAiFigureHeat();
+  bindRevealSteppersHeat(app);
   updateDeformationReveal(currentState);
 }
 
@@ -1128,104 +1141,299 @@ function calculationParametersHtmlHeat(variant) {
 }
 
 // ===== heat：A1 右侧「力法步骤」框；协调图与位移公式 =====
-// 「力法步骤」：A1-1～A1-5 显示。「1. 定基本结构」一直亮着（有颜色），
-// 「2. 列力法方程」从 A1-4 起亮，之前是灰色。教师端放在右上角（滑块卡片上方），窄屏和手机放在画布上面（styles.css）。
+// 「力法步骤」：A1-1～A1-4 显示。「1. 定基本结构」一直亮着（有颜色），
+// 「2. 列力法方程」是按钮：A1-3 进来时是灰色，点一下变亮并显示力法方程（再点收起）；A1-4 一直亮。教师端放在右上角（滑块卡片上方），窄屏和手机放在画布上面（styles.css）。
 // 版面调试里叫「「力法步骤」框」。
 function methodStepsHtmlHeat() {
   return '<aside class="method-steps-heat" data-method-steps-heat hidden aria-label="力法步骤"><h2>力法步骤</h2><ol>'
-    + '<li data-method-step-heat="1">1. 定基本结构</li><li data-method-step-heat="2">2. 列力法方程</li></ol></aside>';
+    + '<li data-method-step-heat="1">1. 定基本结构</li><li data-method-step-heat="2"><button type="button" class="method-step-button-heat" data-method-step-button-heat disabled>2. 列力法方程</button></li></ol></aside>';
 }
+const TUNING_PAGE_HEAT = new URLSearchParams(location.search).get("tune") === "1";
+let a13EquationShownHeat = TUNING_PAGE_HEAT;
+document.addEventListener("click", (event) => {
+  const button = event.target.closest?.("[data-method-step-button-heat]");
+  if (!button || button.disabled) return;
+  a13EquationShownHeat = !a13EquationShownHeat;
+  forceStoryboardRefresh?.();
+});
 
-// step：A1 的步号（0～5）；A2 各页传 -1，框收起。
+// step：A1 的步号（0～4）；A2 各页传 -1，框收起。
 function updateMethodStepsHeat(step) {
   const box = document.querySelector("[data-method-steps-heat]");
   if (!box) return;
   box.hidden = layoutMode || step < 1;
   box.querySelectorAll("[data-method-step-heat]").forEach((item) => {
-    item.classList.toggle("is-active-heat", item.dataset.methodStepHeat === "1" || step >= 4);
+    item.classList.toggle("is-active-heat", item.dataset.methodStepHeat === "1" || step >= 4 || (step === 3 && a13EquationShownHeat));
   });
+  const button = box.querySelector("[data-method-step-button-heat]");
+  if (button) {
+    button.disabled = step !== 3;
+    button.setAttribute("aria-pressed", String(step === 3 && a13EquationShownHeat));
+  }
 }
 
-// 整图页按原比例显示；公式与背景共用 SVG 坐标，缩放后仍对准图片里的位移符号。
-const METHOD_STRIP_FRAMES_HEAT = [1, 2, 3, 4].map(number => `/assets/force-story/scene/A1-4-增补-新-${number}.png`);
-const stepFigurePlaybackHeat = new WeakMap();
-const STEP_FORMULAS_HEAT = {
-  fyb: { step: 2, x: 1165, y: 555, width: 515, height: 250, color: "#008000" },
-  thermal: { step: 3, x: 2940, y: 555, width: 520, height: 380, color: "#800080" },
-};
+// ===== heat：整图 =====
+// A1-4：顶部四个圆球。进来时一个都没点（只有底图）；第 1 个只显示第一项；第 2 个加第二项，第一项盖半透明白色；第 3 个加「0 值项」，前两项都盖上；第 4 个三项都亮。
+// 底图是原 A1-4-增补-新-1.png（顶部力法方程和三色底），三项是 新-A1-4-1～3.svg，坐标都是 5200×1715。
+const METHOD_STRIP_BASE_HEAT = "/assets/force-story/scene/A1-4-增补-新-1.png";
+const METHOD_STRIP_PARTS_HEAT = [1, 2, 3].map(number => `/assets/force-story/新-A1-4-${number}.svg`);
+const METHOD_STRIP_BOXES_HEAT = [[13, 374, 1690, 1313], [1742, 374, 1755, 1313], [3562, 374, 1609, 1313]];
+// A2-1：AI 在右下角模型上长出变形曲线（坐标按 新-A2-1.svg 画成 1600×830 时量的：梁 x = 969～1457，梁轴线 y = 670）。
+const AI_FIGURE_BEAM_HEAT = { x0: 969, x1: 1457, y: 670, drop: 112, dimX: 1505 };
 const STEP_FIGURES_HEAT = {
-  methodStrip: { frames: METHOD_STRIP_FRAMES_HEAT, alt: "基本结构在 FyB 作用下和在温度作用下的 B 点位移，原结构 B 点位移为零" },
-  fybDisplacement: { src: METHOD_STRIP_FRAMES_HEAT[3], alt: "FyB 引起的 B 点位移：δ11 FyB = l³ FyB / (3EI)", formulas: ["fyb"] },
-  thermalDisplacement: { src: "/assets/force-story/scene/A1-4-增补-新-5.png", alt: "力位移与温度位移：δ11 FyB = l³ FyB / (3EI)，Δ1T = −αΔt l² / (2h) = −4.5 mm", formulas: ["fyb", "thermal"] },
-  bendSources: { src: "/assets/force-story/scene/bend-sources-heat.png", alt: "弯曲变形的两个来源：由弯矩引起的用 M/EI 表示、用图乘法计算；由温度引起的不在 M/EI 里，要用温度位移公式" },
+  methodStrip: { alt: "力法方程逐项检查：第一项 δ11FyB，第二项 Δ1P = 0，原结构 ΔB = 0" },
+  loadIntegration: { src: "/assets/force-story/新-A2-0.svg", side: true, alt: "荷载作用：图乘法计算 Δ1P = ql⁴/(8EI)" },
+  thermalIntegration: { src: "/assets/force-story/新-A2-1.svg", side: true, alt: "温度作用：弯矩为零，图乘法得到 Δ1P = 0" },
+  bendSources: { src: "/assets/force-story/新-A2-2.svg", before: "/assets/force-story/新-A2-2-1.svg", alt: "弯曲变形的两个来源：由弯矩引起，用图乘法；由温度引起，用温度位移公式" },
 };
+// A2-0、A2-1：开始只露右上角（基本结构＋作用），另外三块用白块盖住；右侧三个圆球依次去掉左上、左下、右下的白块。
+// 坐标按 新-A2-0／新-A2-1.svg 画成 1600×830 量的：竖分隔线 x ≈ 737，横分隔线 y ≈ 414（分隔线跟着各块一起露出）；
+// 右下的白块连同中间的图乘公式框（x 752～1596，y 280～556）一起盖住。
+const REVEAL_BLOCKS_HEAT = [
+  "M0 0 H739 V416 H0 Z",
+  "M0 412 H739 V830 H0 Z",
+  "M735 830 V412 H748 V278 H1600 V830 Z",
+];
+function revealBlocksSvgHeat() {
+  return REVEAL_BLOCKS_HEAT.map((d, index) => `<path class="reveal-block-heat" data-reveal-block-heat="${index + 1}" d="${d}" fill="#fff"/>`).join("");
+}
+// 一排圆球（count 个）：stage 0 一个都没点，k 表示点到第 k 个。一个圆球时点一下切换。
+function revealStepperHtmlHeat(count, label, target = "") {
+  const dots = Array.from({ length: count }, (_, index) => {
+    const left = count === 1 ? "50%" : `calc(20px + (100% - 40px) * ${index} / ${count - 1})`;
+    return `<span class="method-stepper-dot-heat" data-reveal-dot-heat="${index + 1}" style="left: ${left}" aria-hidden="true"></span>`;
+  }).join("");
+  const control = count > 1
+    ? `<input type="range" min="1" max="${count}" step="1" value="1" aria-label="${label}" data-reveal-range-heat/>`
+    : `<button type="button" class="reveal-single-heat" aria-label="${label}" aria-pressed="false" data-reveal-single-heat></button>`;
+  return `<div class="reveal-stepper-heat" data-reveal-stepper-heat="${count}" data-reveal-stage-heat="0"${target ? ` data-reveal-target-heat="${target}"` : ""}>
+    ${count > 1 ? '<span class="method-stepper-track-heat" aria-hidden="true"><span class="method-stepper-fill-heat"></span></span>' : ""}${dots}${control}
+  </div>`;
+}
+function setRevealStageHeat(stepper, stage, figure = null) {
+  const count = Number(stepper.dataset.revealStepperHeat) || 1;
+  const value = Math.max(0, Math.min(count, Math.round(Number(stage) || 0)));
+  stepper.dataset.revealStageHeat = String(value);
+  stepper.querySelectorAll("[data-reveal-dot-heat]").forEach(dot => {
+    const n = Number(dot.dataset.revealDotHeat);
+    dot.classList.toggle("is-passed-heat", n < value);
+    dot.classList.toggle("is-current-heat", n === value);
+  });
+  const fill = stepper.querySelector(".method-stepper-fill-heat");
+  if (fill) fill.style.width = `${count > 1 ? Math.max(0, value - 1) / (count - 1) * 100 : 0}%`;
+  const range = stepper.querySelector("[data-reveal-range-heat]");
+  if (range && Number(range.value) !== Math.max(1, value)) range.value = String(Math.max(1, value));
+  stepper.querySelector("[data-reveal-single-heat]")?.setAttribute("aria-pressed", String(value > 0));
+  if (stepper.dataset.revealTargetHeat === "cc") { applyCcSlideHeat(stepper.closest(".force-story"), value); return; }
+  const target = figure || stepper.closest("[data-step-figure-heat]")
+    || stepper.closest(".force-story")?.querySelector("[data-step-figure-heat]:not([hidden])");
+  if (!target) return;
+  target.querySelectorAll("[data-reveal-block-heat]").forEach(block => {
+    block.style.display = value >= Number(block.dataset.revealBlockHeat) ? "none" : "";
+  });
+  target.querySelectorAll("[data-reveal-swap-heat]").forEach(image => {
+    image.hidden = Number(image.dataset.revealSwapHeat) !== Math.min(value, 1);
+  });
+}
+// A2-4：点第 k 个圆球，画布和滑块卡片收起，换成 cc-slide-k.SVG（原文件没有 viewBox，套一层 1280×720 的 svg 来缩放）。
+const CC_SLIDES_HEAT = [1, 2, 3, 4, 5].map(number => `/assets/force-story/cc-slide-${number}.SVG`);
+function ccSlidesHtmlHeat() {
+  return `<figure class="step-figure-heat cc-slides-heat" data-cc-slides-heat hidden>
+    <svg viewBox="0 0 1280 720" role="img" aria-label="温度变化时超静定梁的受力过程示意">
+      ${CC_SLIDES_HEAT.map((src, index) => `<image data-cc-slide-heat="${index + 1}" href="${runtimeUrl(src)}" width="1280" height="720" style="display:none"/>`).join("")}
+    </svg>
+  </figure>`;
+}
+function applyCcSlideHeat(story, value) {
+  if (!story) return;
+  story.toggleAttribute("data-cc-mode-heat", value > 0);
+  const figure = story.querySelector("[data-cc-slides-heat]");
+  if (figure) figure.hidden = value === 0;
+  story.querySelectorAll("[data-cc-slide-heat]").forEach(image => {
+    image.style.display = Number(image.dataset.ccSlideHeat) === value ? "" : "none";
+  });
+}
+function bindRevealSteppersHeat(root = document) {
+  root.querySelectorAll("[data-reveal-stepper-heat]").forEach(stepper => {
+    if (stepper.dataset.revealBoundHeat) return;
+    stepper.dataset.revealBoundHeat = "1";
+    const range = stepper.querySelector("[data-reveal-range-heat]");
+    range?.addEventListener("input", () => setRevealStageHeat(stepper, range.value));
+    range?.addEventListener("click", () => setRevealStageHeat(stepper, range.value));
+    stepper.querySelector("[data-reveal-single-heat]")?.addEventListener("click", () => {
+      setRevealStageHeat(stepper, Number(stepper.dataset.revealStageHeat) > 0 ? 0 : 1);
+    });
+  });
+}
 
 function stepFigureHtmlHeat(kind) {
   const figure = STEP_FIGURES_HEAT[kind];
   let content;
-  if (figure.formulas) {
-    content = `<svg viewBox="0 0 5200 1715" role="img" aria-label="${figure.alt}">
-      <image href="${runtimeUrl(figure.src)}" width="5200" height="1715"/>
-      ${figure.formulas.map(key => {
-        const formula = STEP_FORMULAS_HEAT[key];
-        const html = deformationFormulaHtml(formula.step).replace(" = ", "<br/>= ");
-        return `<g data-figure-formula-heat="${key}" style="--heat-formula-x:${formula.x}px;--heat-formula-y:${formula.y}px;--heat-formula-scale:1">
-          <foreignObject x="0" y="0" width="${formula.width}" height="${formula.height}">
-            <div xmlns="http://www.w3.org/1999/xhtml" class="step-figure-formula-heat" style="color:${formula.color}">= ${html}</div>
-          </foreignObject>
-        </g>`;
-      }).join("")}
+  if (kind === "methodStrip") {
+    const [base, ...parts] = [METHOD_STRIP_BASE_HEAT, ...METHOD_STRIP_PARTS_HEAT].map(src => runtimeUrl(src));
+    const layers = parts.map((src, index) => {
+      const box = METHOD_STRIP_BOXES_HEAT[index];
+      return `<image data-method-part-heat="${index + 1}" href="${src}" width="5200" height="1715"/>`
+        + (index < 2 ? `<rect class="method-strip-dim-heat" data-method-dim-heat="${index + 1}" x="${box[0]}" y="${box[1]}" width="${box[2]}" height="${box[3]}" rx="18"/>` : "");
+    });
+    // 后出来的项要画在前面项的遮罩之上，所以顺序是：项1、遮罩1、项2、遮罩2、项3。
+    content = `<div class="method-strip-body-heat">
+      <div class="method-strip-top-heat">
+        <div class="method-equation-title-heat">力法方程</div>
+        <div class="method-stepper-heat" data-method-stepper-heat>
+          <span class="method-stepper-track-heat" aria-hidden="true"><span class="method-stepper-fill-heat"></span></span>
+          ${[1, 2, 3, 4].map(n => `<span class="method-stepper-dot-heat" data-method-stepper-dot="${n}" aria-hidden="true"></span>`).join("")}
+          <input type="range" min="1" max="4" step="1" value="1" aria-label="逐项查看力法方程（1～4）" data-method-stepper-range/>
+        </div>
+      </div>
+      <svg class="method-strip-art-heat" viewBox="0 0 5200 1715" role="img" aria-label="${figure.alt}">
+        <image href="${base}" width="5200" height="1715"/>
+        ${layers.join("")}
+      </svg>
+    </div>`;
+  } else if (kind === "loadIntegration") {
+    content = `<svg viewBox="0 0 1600 830" role="img" aria-label="${figure.alt}">
+      <image href="${runtimeUrl(figure.src)}" width="1600" height="830"/>
+      ${revealBlocksSvgHeat()}
     </svg>`;
+  } else if (kind === "thermalIntegration") {
+    const beam = AI_FIGURE_BEAM_HEAT;
+    content = `<svg viewBox="0 0 1600 830" role="img" aria-label="${figure.alt}">
+      <image href="${runtimeUrl(figure.src)}" width="1600" height="830"/>
+      <g class="ai-figure-curve-heat" data-ai-figure-curve style="display:none">
+        <polyline data-ai-curve-line fill="none" stroke="#800080" stroke-width="7" stroke-linecap="round" stroke-dasharray="22 14"/>
+        <g data-ai-curve-points fill="#800080"></g>
+        <g data-ai-curve-dimension stroke="#111" stroke-width="5" fill="none" stroke-linecap="round" style="display:none">
+          <path d="M${beam.dimX} ${beam.y} V${beam.y + beam.drop}"/>
+          <path d="M${beam.dimX - 12} ${beam.y + 18} L${beam.dimX} ${beam.y} L${beam.dimX + 12} ${beam.y + 18}"/>
+          <path d="M${beam.dimX - 12} ${beam.y + beam.drop - 18} L${beam.dimX} ${beam.y + beam.drop} L${beam.dimX + 12} ${beam.y + beam.drop - 18}"/>
+          <path d="M${beam.dimX - 22} ${beam.y} H${beam.dimX + 22} M${beam.dimX - 22} ${beam.y + beam.drop} H${beam.dimX + 22}"/>
+        </g>
+      </g>
+      ${revealBlocksSvgHeat()}
+    </svg>`;
+  } else if (kind === "bendSources") {
+    content = `<img data-reveal-swap-heat="0" src="${runtimeUrl(figure.before)}" alt="${figure.alt}（点圆球前）"/>
+      <img data-reveal-swap-heat="1" src="${runtimeUrl(figure.src)}" alt="${figure.alt}" hidden/>
+      ${revealStepperHtmlHeat(1, "显示弯曲变形的两个来源")}`;
   } else {
-    content = (figure.frames || [figure.src]).map((src, index) => `<img src="${runtimeUrl(src)}" alt="${figure.alt}" ${index ? "hidden" : ""}/>`).join("");
+    content = `<img src="${runtimeUrl(figure.src)}" alt="${figure.alt}"/>`;
   }
-  const parameters = kind === "bendSources" ? "" : calculationParametersHtmlHeat("prominent");
+  const parameters = kind === "methodStrip" ? calculationParametersHtmlHeat("prominent") : "";
   return `<figure class="step-figure-heat" data-step-figure-heat="${kind}" hidden>${parameters}${content}</figure>`;
 }
 
-function methodStripIntervalHeat(figure) {
-  const seconds = parseFloat(getComputedStyle(figure).getPropertyValue("--heat-frame-interval"));
-  return Number.isFinite(seconds) ? Math.max(.05, Math.min(10, seconds)) : .2;
+// A1-4 的四个圆球：stage 0（一个都没点）～4。
+function setMethodStripStageHeat(figure, stage) {
+  const value = Math.max(0, Math.min(4, Math.round(Number(stage) || 0)));
+  figure.dataset.methodStageHeat = String(value);
+  figure.querySelectorAll("[data-method-part-heat]").forEach(part => {
+    part.style.display = Number(part.dataset.methodPartHeat) <= Math.min(value, 3) ? "" : "none";
+  });
+  figure.querySelectorAll("[data-method-dim-heat]").forEach(dim => {
+    const index = Number(dim.dataset.methodDimHeat);
+    dim.style.display = value <= 3 && index < value ? "" : "none";
+  });
+  figure.querySelectorAll("[data-method-stepper-dot]").forEach(dot => {
+    const n = Number(dot.dataset.methodStepperDot);
+    dot.classList.toggle("is-passed-heat", n < value);
+    dot.classList.toggle("is-current-heat", n === value);
+  });
+  const fill = figure.querySelector(".method-stepper-fill-heat");
+  if (fill) fill.style.width = `${Math.max(0, value - 1) / 3 * 100}%`;
+  const range = figure.querySelector("[data-method-stepper-range]");
+  if (range && Number(range.value) !== Math.max(1, value)) range.value = String(Math.max(1, value));
 }
 
-function playMethodStripHeat(figure) {
-  const frames = [...figure.querySelectorAll("img")];
-  clearTimeout(stepFigurePlaybackHeat.get(figure)?.timer);
-  const playback = { timer: null, interval: methodStripIntervalHeat(figure) };
-  stepFigurePlaybackHeat.set(figure, playback);
-  frames.forEach((frame, index) => { frame.hidden = index !== 0; });
-  // 先解码四张本地图片，播放时只切换可见性，避免换 src 出现空白帧。
-  Promise.all(frames.map(frame => frame.decode().catch(() => {}))).then(() => {
-    // 页码对应的编辑样式由观察器更新；开始计时前读取，避免沿用上一页的默认间隔。
-    playback.interval = methodStripIntervalHeat(figure);
-    let index = 0;
-    const advance = () => {
-      if (stepFigurePlaybackHeat.get(figure) !== playback || figure.hidden || !figure.isConnected) return;
-      playback.timer = setTimeout(() => {
-        if (stepFigurePlaybackHeat.get(figure) !== playback || figure.hidden || !figure.isConnected) return;
-        frames[index].hidden = true;
-        frames[++index].hidden = false;
-        if (index < frames.length - 1) advance();
-      }, playback.interval * 1000);
-    };
-    advance();
-  });
+function bindMethodStripHeat(figure) {
+  if (!figure || figure.dataset.methodBoundHeat) return;
+  figure.dataset.methodBoundHeat = "1";
+  const range = figure.querySelector("[data-method-stepper-range]");
+  range?.addEventListener("input", () => setMethodStripStageHeat(figure, range.value));
+  range?.addEventListener("click", () => setMethodStripStageHeat(figure, range.value)); // 没点时 range 停在 1，点第 1 个圆球不触发 input
+  setMethodStripStageHeat(figure, 0);
 }
 
 function updateStepFigureHeat(story, on, kind) {
   if (!story) return;
   story.toggleAttribute("data-figure-heat", Boolean(on));
-  story.dataset.parametersHeat = on && kind !== "bendSources" ? "prominent" : "compact";
+  story.toggleAttribute("data-figure-side-heat", Boolean(on) && Boolean(STEP_FIGURES_HEAT[kind]?.side));
+  story.dataset.parametersHeat = on && kind === "methodStrip" ? "prominent" : "compact";
   story.querySelectorAll("[data-step-figure-heat]").forEach(figure => {
     const active = Boolean(on) && figure.dataset.stepFigureHeat === kind;
     const entering = active && figure.hidden;
     figure.hidden = !active;
-    if (!active) {
-      clearTimeout(stepFigurePlaybackHeat.get(figure)?.timer);
-      stepFigurePlaybackHeat.delete(figure);
-    } else if (kind === "methodStrip" && (entering || stepFigurePlaybackHeat.get(figure)?.interval !== methodStripIntervalHeat(figure))) {
-      playMethodStripHeat(figure);
+    if (figure.dataset.stepFigureHeat === "methodStrip") {
+      bindMethodStripHeat(figure);
+      if (entering) setMethodStripStageHeat(figure, 0); // 每次进入 A1-4 都从「一个都没点」开始
     }
+    // A2-0、A2-1、A2-2：每次进入都从「一个都没点」开始（A2-0、A2-1 的三个圆球在右侧卡片里，两页共用）
+    if (entering && figure.dataset.stepFigureHeat !== "methodStrip") {
+      const stepper = figure.querySelector("[data-reveal-stepper-heat]") || story.querySelector("[data-reveal-card-heat] [data-reveal-stepper-heat]");
+      if (stepper) setRevealStageHeat(stepper, 0, figure);
+    }
+  });
+}
+
+// A2-1：「启动 AI 辅助计算」后，右下角模型上逐点长出温度引起的变形曲线（v ∝ x²，B 点向下）。
+let aiFigureFrameHeat = null;
+let aiFigureDoneHeat = false;
+function aiFigurePointsHeat(progress = 1) {
+  const beam = AI_FIGURE_BEAM_HEAT;
+  const count = Math.max(1, Math.round(progress * 100));
+  return Array.from({ length: count + 1 }, (_, i) => {
+    const s = i / 100;
+    return [beam.x0 + (beam.x1 - beam.x0) * s, beam.y + beam.drop * s * s];
+  });
+}
+function drawAiFigureHeat(progress, done) {
+  const group = document.querySelector("[data-ai-figure-curve]");
+  if (!group) return;
+  group.style.display = progress > 0 ? "" : "none";
+  const points = aiFigurePointsHeat(progress);
+  group.querySelector("[data-ai-curve-line]").setAttribute("points", points.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" "));
+  const dots = group.querySelector("[data-ai-curve-points]");
+  dots.innerHTML = done ? "" : points.filter((_, i) => i % 4 === 0).map(([x, y]) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="7"/>`).join("");
+  group.querySelector("[data-ai-curve-dimension]").style.display = done ? "" : "none";
+}
+function resetAiFigureHeat() {
+  if (aiFigureFrameHeat) cancelAnimationFrame(aiFigureFrameHeat);
+  aiFigureFrameHeat = null;
+  aiFigureDoneHeat = false;
+  drawAiFigureHeat(0, false);
+  const button = document.querySelector("[data-ai-figure-button]");
+  const status = document.querySelector("[data-ai-figure-status]");
+  if (button) { button.disabled = false; button.textContent = "启动 AI 辅助计算"; }
+  if (status) status.textContent = "逐点计算 · 计算 26 个采样点位移";
+  document.querySelector("[data-ai-figure-heat] .ai-deformation-card")?.removeAttribute("aria-busy");
+}
+function bindAiFigureHeat() {
+  const button = document.querySelector("[data-ai-figure-button]");
+  const status = document.querySelector("[data-ai-figure-status]");
+  const card = document.querySelector("[data-ai-figure-heat] .ai-deformation-card");
+  if (!button) return;
+  aiFigureDoneHeat = false;
+  aiFigureFrameHeat = null;
+  button.addEventListener("click", () => {
+    if (aiFigureDoneHeat || aiFigureFrameHeat) return;
+    button.disabled = true;
+    button.textContent = "AI 正在逐点计算…";
+    card?.setAttribute("aria-busy", "true");
+    const startedAt = performance.now();
+    const duration = 2000;
+    const animate = (now) => {
+      const progress = Math.min(1, (now - startedAt) / duration);
+      status.textContent = `${Math.min(26, Math.floor(progress * 25) + 1)}/26 个采样点 · AI逐点计算中`;
+      drawAiFigureHeat(progress, false);
+      if (progress < 1) { aiFigureFrameHeat = requestAnimationFrame(animate); return; }
+      aiFigureFrameHeat = null;
+      aiFigureDoneHeat = true;
+      drawAiFigureHeat(1, true);
+      button.textContent = "AI 计算完成";
+      status.textContent = "26/26 个采样点 · 变形曲线已生成";
+      card?.removeAttribute("aria-busy");
+    };
+    aiFigureFrameHeat = requestAnimationFrame(animate);
   });
 }
 
@@ -1607,6 +1815,16 @@ const DEFORMATION_COMPONENT_ASSETS = {
 // 内部值 r 对应 FyB = 2r kN；4r − 4.5 = 0。曲线按新真解归一化，避免三倍响应挤出版面。
 const THEORETICAL_FYB_RATIO = 9 / 8;
 const deformationComponentImages = {};
+// heat 10-21：A2-3、A2-4 下排曲线的纵向比例 1250 是为看清 FyB = 2.25 kN 时的残余形状定的；
+// 拖到别的 FyB 时 B 端位移按 tanh 收在 ±DEFORMATION_END_LIMIT_HEAT（画布单位）以内，不再冲出画布、压到公式。
+// 接近 2.25 kN 时和原比例一致；离得越远位移越大，只是增长逐渐变缓。
+const DEFORMATION_END_LIMIT_HEAT = 380;
+function deformationCurveScaleHeat(scale, legacyStep, isTopCurve, mode, ratio, optionsHeat) {
+  if (legacyStep < 4 || isTopCurve || optionsHeat || mode !== "combined") return scale;
+  const endValue = Math.abs(1 - ratio / THEORETICAL_FYB_RATIO); // 叠加形状在 B 端的值（两项在 B 端都归一为 1）
+  if (endValue < 1e-6) return scale;
+  return DEFORMATION_END_LIMIT_HEAT * Math.tanh(scale * endValue / DEFORMATION_END_LIMIT_HEAT) / endValue;
+}
 
 function drawDecompositionStructure(canvas, mode, r, optionsHeat = null) {
   if (!canvas) return;
@@ -1623,7 +1841,7 @@ function drawDecompositionStructure(canvas, mode, r, optionsHeat = null) {
     const curveX0 = isTopCurve ? numeric.topDeformationX0 : numeric.deformationX0;
     const curveXB = isTopCurve ? numeric.topDeformationXB : numeric.deformationXB;
     const curveBaseline = isTopCurve ? numeric.topDeformationBaseline : numeric.deformationBaseline;
-    const curveScale = isTopCurve ? numeric.topDeformationScale : numeric.deformationScale;
+    const curveScale = deformationCurveScaleHeat(isTopCurve ? numeric.topDeformationScale : numeric.deformationScale, customStep, isTopCurve, mode, responseRatio, optionsHeat);
     const curveLineWidth = isTopCurve ? numeric.topDeformationLineWidth : numeric.deformationLineWidth;
     const isTrendPreview = customStep >= 1 && customStep <= 3 && !isTopCurve && !optionsHeat;
     const color = isTrendPreview
@@ -1715,7 +1933,7 @@ function drawDecompositionStructure(canvas, mode, r, optionsHeat = null) {
     });
     ctx.stroke();
     const showEndpointAnnotation = !optionsHeat && (isTrendPreview
-      || (customStep === 4 && aiDeformationEnabled && !isAiScan)
+      || (customStep === 4 && !isAiScan)
       || customStep === 5);
     if (showEndpointAnnotation) {
       const endPoint = points[points.length - 1];
@@ -2297,8 +2515,11 @@ function createLayoutEditor() {
   syncLayoutEditor();
 }
 
+// heat 10-21：反馈页 A/B/C 的文字跟着 E 页选项走（版面调试里改了 E 页选项文字，layout-tuner.js 交给 window.BEAM_VOTE_OPTION_TEXTS）。
+const VOTE_OPTION_DEFAULTS_HEAT = {agree:"三组都是",doubt:"只有其中一组是",unsure:"不一定在这三组里"};
 function voteBars(counts = {agree:0,doubt:0,unsure:0}) {
-  const labels = {agree:"A · 三组都是",doubt:"B · 只有其中一组是",unsure:"C · 不一定在这三组里"};
+  const texts = { ...VOTE_OPTION_DEFAULTS_HEAT, ...(window.BEAM_VOTE_OPTION_TEXTS || {}) };
+  const labels = {agree:`A · ${texts.agree}`,doubt:`B · ${texts.doubt}`,unsure:`C · ${texts.unsure}`};
   const total = Object.values(counts).reduce((a,b)=>a+b,0) || 1;
   return Object.entries(labels).map(([key,label]) => `<div class="vote-bar"><header><span>${label}</span><strong>${counts[key] || 0}</strong></header><div class="bar-track"><div class="bar-fill" style="width:${(counts[key]||0)/total*100}%"></div></div></div>`).join("");
 }

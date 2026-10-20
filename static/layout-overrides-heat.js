@@ -1,46 +1,48 @@
-// BEAM LAB 版面调试保存的配置（由「版面调试」窗口自动生成，2026-10-11 19:51:15）
+// BEAM LAB 版面调试保存的配置（由「版面调试」窗口自动生成，2026-10-20 19:21:56）
 // 放在 static 文件夹里，teacher.html 和 student.html 会自动读取。
 // "wide" "medium" "narrow" 是教师版（按宽度分档），"phone" 是学生页的手机版面。
 // 想恢复默认版面：把 "regimes" 后面的内容改成 {}，或在版面调试里重置后再保存。
-// "pageMapHeat": 4 表示页号已按 2026-10-11 第三次调整后的步骤编排（A1-0～A1-5、A2-0～A2-4）；小于 4 或没有这一项的旧文件，打开时自动改到新页号。
+// "pageMapHeat": 5 表示页号已按 2026-10-20 的步骤编排（A1-0～A1-4、A2-0～A2-4）；小于 5 或没有这一项的旧文件，打开时自动改到新页号。
 // "votes" 是 E 投票反馈页的人数（agree = A、doubt = B、unsure = C），在版面调试里选中「人数方块」可以改。
 // "transfer" 是 M 页「学生回答」：B、C 的人数（A = 第一次投票的总人数 − B − C）和每位同学的想法，在版面调试里选中 M 页右栏可以改。
+// "comments" 是 E 投票反馈页的匿名补充观点（一条一句），在版面调试里选中「匿名观点区」可以改。
 // "canvas" 是教师版各页画布的大小，手机照搬教师版时用；保存时自动量，不用改。
 window.BEAM_LAYOUT_OVERRIDES = {
   "canvas": {
     "pages": {
       "A1-0": [
-        1834.8,
+        1758.2,
         759.5
       ],
       "A1-1": [
-        1834.8,
+        1758.2,
         759.5
       ],
       "A1-2": [
-        1834.8,
+        1758.2,
         759.5
       ],
       "A1-3": [
-        1450.8,
-        759.5
-      ],
-      "A2-0": [
-        1460,
+        1758.2,
         759.5
       ],
       "A2-3": [
-        1460,
+        1383,
         759.5
       ],
       "A2-4": [
-        1460,
+        1383,
         759.5
       ]
     },
-    "width": 1844
+    "width": 1767
   },
-  "pageMapHeat": 4,
+  "comments": [
+    "没有荷载，就是没有力吧。",
+    "温度和荷载有点像，又不太像。",
+    "只靠平衡判断不了。"
+  ],
+  "pageMapHeat": 5,
   "regimes": {
     "phone": {
       "A1-0": {
@@ -192,96 +194,69 @@ window.BEAM_LAYOUT_OVERRIDES = {
         }
       },
       "A1-3": {
-        "canvas": {
-          "kind": "canvas",
-          "label": "画布白框",
+        "arrow": {
+          "kind": "arrow",
+          "label": "过渡箭头",
           "props": {
-            "ar": 1.354
-          },
-          "sel": "#app .force-free-canvas"
-        },
-        "captionBottom": {
-          "kind": "abstext",
-          "label": "下方图注",
-          "props": {
-            "kh": 70.2326,
+            "kh": 123.7209,
             "kw": 95.3488,
-            "lvw": 2.3399,
-            "tvw": 34.7321
+            "lvw": 40.746,
+            "tvw": 45.6859
           },
-          "sel": "#app .force-free-canvas > .structure-caption.bottom-caption"
-        },
-        "captionTop": {
-          "kind": "abstext",
-          "label": "上方图注",
-          "props": {
-            "kh": 70.2326,
-            "kw": 95.3488,
-            "lvw": 1.63,
-            "tvw": 24.4457
-          },
-          "sel": "#app .force-free-canvas > .structure-caption.top-caption"
-        },
-        "label:basicMA": {
-          "kind": "label",
-          "label": "下方 MA 数值",
-          "props": {
-            "dx": -56,
-            "dy": -15
-          },
-          "sel": "#app [data-force-label-slot=\"basicMA\"]"
-        },
-        "label:originalMA": {
-          "kind": "label",
-          "label": "上方 MA 数值",
-          "props": {
-            "dx": -49,
-            "dy": -13
-          },
-          "sel": "#app [data-force-label-slot=\"originalMA\"]"
-        },
-        "slot:basicMomentBg": {
-          "kind": "abs",
-          "label": "10 下方弯矩图",
-          "props": {
-            "kh": 70.2326,
-            "kw": 95.3488,
-            "lvw": 60.268,
-            "tvw": 42.5726
-          },
-          "sel": "#app .force-free-canvas > [data-element-slot=\"basicMomentBg\"]"
+          "sel": "#app .force-free-canvas > .force-transition-arrow"
         },
         "slot:basicStructure": {
           "kind": "abs",
           "label": "07 基本体系图",
           "props": {
-            "kh": 70.2326,
+            "kh": 123.7209,
             "kw": 95.3488,
-            "lvw": 3.8528,
-            "tvw": 44.1356,
-            "wvw": 37.6332
+            "lvw": 21.0062,
+            "tvw": 70.1058
           },
           "sel": "#app .force-free-canvas > [data-element-slot=\"basicStructure\"]"
         },
-        "slot:originalMomentBg": {
+        "slot:conceptOriginal": {
           "kind": "abs",
-          "label": "08 上方弯矩图",
+          "label": "03 圆一：原约束",
           "props": {
-            "kh": 70.2326,
+            "kh": 123.7209,
             "kw": 95.3488,
-            "lvw": 59.4883,
-            "tvw": 7.5959
+            "lvw": 60.7169,
+            "tvw": 29.5235
           },
-          "sel": "#app .force-free-canvas > [data-element-slot=\"originalMomentBg\"]"
+          "sel": "#app .force-free-canvas > [data-element-slot=\"conceptOriginal\"]"
+        },
+        "slot:conceptRedundant": {
+          "kind": "abs",
+          "label": "05 圆三：力代约束",
+          "props": {
+            "kh": 123.7209,
+            "kw": 95.3488,
+            "lvw": 59.9372,
+            "tvw": 58.224
+          },
+          "sel": "#app .force-free-canvas > [data-element-slot=\"conceptRedundant\"]"
+        },
+        "slot:conceptReleased": {
+          "kind": "abs",
+          "label": "04 圆二：解除约束",
+          "props": {
+            "kh": 123.7209,
+            "kw": 95.3488,
+            "lvw": 73.0121,
+            "tvw": 42.947
+          },
+          "sel": "#app .force-free-canvas > [data-element-slot=\"conceptReleased\"]"
         },
         "slot:originalStructure": {
           "kind": "abs",
           "label": "02 原结构图",
           "props": {
-            "kh": 70.2326,
+            "kh": 123.7209,
             "kw": 95.3488,
-            "lvw": 3.6438,
-            "tvw": 4.4735
+            "lvw": 21.0571,
+            "tvw": 26.0624
           },
           "sel": "#app .force-free-canvas > [data-element-slot=\"originalStructure\"]"
         }
@@ -474,6 +449,13 @@ window.BEAM_LAYOUT_OVERRIDES = {
             "tvw": 4.979
           },
           "sel": "#app .force-free-canvas > [data-element-slot=\"originalStructure\"]"
+        },
+        "storyTitle": {
+          "kind": "text",
+          "label": "标题",
+          "props": {},
+          "sel": "#app .force-story > h1",
+          "text": "继续分析未知的对象"
         }
       },
       "A1-1": {
@@ -516,6 +498,13 @@ window.BEAM_LAYOUT_OVERRIDES = {
             "tvw": 1.9616
           },
           "sel": "#app .force-free-canvas > [data-element-slot=\"originalStructure\"]"
+        },
+        "storyTitle": {
+          "kind": "text",
+          "label": "标题",
+          "props": {},
+          "sel": "#app .force-story > h1",
+          "text": "力法第1步：定基本结构"
         }
       },
       "A1-2": {
@@ -592,101 +581,67 @@ window.BEAM_LAYOUT_OVERRIDES = {
             "tvw": 1.9616
           },
           "sel": "#app .force-free-canvas > [data-element-slot=\"originalStructure\"]"
+        },
+        "storyTitle": {
+          "kind": "text",
+          "label": "标题",
+          "props": {},
+          "sel": "#app .force-story > h1",
+          "text": "力法第1步：定基本结构"
         }
       },
       "A1-3": {
+        "arrow": {
+          "kind": "arrow",
+          "label": "过渡箭头",
+          "props": {
+            "hvw": 4.9892,
+            "kh": 40.1302,
+            "kw": 99.4035,
+            "lvw": 38.6874,
+            "tvw": 17.4178
+          },
+          "sel": "#app .force-free-canvas > .force-transition-arrow"
+        },
         "captionBottom": {
           "kind": "abstext",
           "label": "下方图注",
           "props": {
             "kh": 40.1302,
-            "kw": 78.5792,
+            "kw": 99.4035,
+            "lvw": 1.8964,
             "text": 200,
-            "tvw": 27.3954
+            "tvw": 27.3957
           },
           "sel": "#app .force-free-canvas > .structure-caption.bottom-caption"
-        },
-        "divider": {
-          "kind": "bar",
-          "label": "上下分隔线",
-          "props": {
-            "kh": 40.1302,
-            "kw": 78.5792,
-            "wvw": 76.0846
-          },
-          "sel": "#app .force-free-canvas > .deformation-row-divider"
         },
         "label:basicFyB": {
           "kind": "label",
           "label": "下方 FyB 数值",
           "props": {
-            "dx": -33,
-            "dy": -11,
+            "dx": 117,
+            "dy": -33,
             "text": 200
           },
           "sel": "#app [data-force-label-slot=\"basicFyB\"]"
-        },
-        "label:basicMA": {
-          "kind": "label",
-          "label": "下方 MA 数值",
-          "props": {
-            "text": 200
-          },
-          "sel": "#app [data-force-label-slot=\"basicMA\"]"
         },
         "label:originalFyB": {
           "kind": "label",
           "label": "上方 FyB 数值",
           "props": {
-            "dx": 36,
-            "dy": 115,
+            "dx": 183,
+            "dy": 100,
             "text": 200
           },
           "sel": "#app [data-force-label-slot=\"originalFyB\"]"
-        },
-        "label:originalMA": {
-          "kind": "label",
-          "label": "上方 MA 数值",
-          "props": {
-            "text": 200
-          },
-          "sel": "#app [data-force-label-slot=\"originalMA\"]"
-        },
-        "momentTitleBottom": {
-          "kind": "abstext",
-          "label": "下方「弯矩图」小标题",
-          "props": {
-            "text": 200
-          },
-          "sel": "#app [data-element-slot=\"basicMomentBg\"] > .moment-diagram-title"
-        },
-        "momentTitleTop": {
-          "kind": "abstext",
-          "label": "上方「弯矩图」小标题",
-          "props": {
-            "text": 200
-          },
-          "sel": "#app [data-element-slot=\"originalMomentBg\"] > .moment-diagram-title"
-        },
-        "slot:basicMomentBg": {
-          "kind": "abs",
-          "label": "10 下方弯矩图",
-          "props": {
-            "kh": 40.1302,
-            "kw": 78.5792,
-            "lvw": 51.8116,
-            "tvw": 24.3047
-          },
-          "sel": "#app .force-free-canvas > [data-element-slot=\"basicMomentBg\"]"
         },
         "slot:conceptOriginal": {
           "kind": "abs",
           "label": "03 圆一：原约束",
           "props": {
             "kh": 40.1302,
-            "kw": 78.5792,
-            "lvw": 65.0969,
-            "wvw": 0
+            "kw": 99.4035,
+            "lvw": 54.3595
           },
           "sel": "#app .force-free-canvas > [data-element-slot=\"conceptOriginal\"]"
         },
@@ -695,38 +650,17 @@ window.BEAM_LAYOUT_OVERRIDES = {
           "label": "05 圆三：力代约束",
           "props": {
             "kh": 40.1302,
-            "kw": 78.5792,
-            "wvw": 0
+            "kw": 99.4035,
+            "lvw": 54.3601
           },
           "sel": "#app .force-free-canvas > [data-element-slot=\"conceptRedundant\"]"
-        },
-        "slot:conceptReleased": {
-          "kind": "abs",
-          "label": "04 圆二：解除约束",
-          "props": {
-            "kh": 40.1302,
-            "kw": 78.5792,
-            "wvw": 0
-          },
-          "sel": "#app .force-free-canvas > [data-element-slot=\"conceptReleased\"]"
-        },
-        "slot:originalMomentBg": {
-          "kind": "abs",
-          "label": "08 上方弯矩图",
-          "props": {
-            "kh": 40.1302,
-            "kw": 78.5792,
-            "lvw": 51.8113,
-            "tvw": 1.9622
-          },
-          "sel": "#app .force-free-canvas > [data-element-slot=\"originalMomentBg\"]"
         },
         "slot:originalStructure": {
           "kind": "abs",
           "label": "02 原结构图",
           "props": {
             "kh": 40.1302,
-            "kw": 78.5792,
+            "kw": 99.4035,
             "tvw": 1.9616
           },
           "sel": "#app .force-free-canvas > [data-element-slot=\"originalStructure\"]"
@@ -736,7 +670,7 @@ window.BEAM_LAYOUT_OVERRIDES = {
           "label": "标题",
           "props": {},
           "sel": "#app .force-story > h1",
-          "text": "检查第一步：定基本结构"
+          "text": "力法第2步：列力法方程"
         }
       },
       "A1-4": {
@@ -754,51 +688,6 @@ window.BEAM_LAYOUT_OVERRIDES = {
           "props": {},
           "sel": "#app .force-story > h1",
           "text": "检查第二步：列力法方程"
-        }
-      },
-      "A1-5": {
-        "formula": {
-          "kind": "abstext",
-          "label": "位移公式",
-          "props": {
-            "kh": 40.1302,
-            "kw": 79.0672,
-            "lvw": 39.2727,
-            "text": 200,
-            "tvw": 32.1863
-          },
-          "sel": "#app .force-free-canvas > .deformation-formula-label"
-        },
-        "fybFormulaHeat": {
-          "kind": "figureFormula",
-          "label": "绿色 FyB 位移公式",
-          "props": {
-            "formulaScale": 120,
-            "formulaX": 1138.5,
-            "formulaY": 519.7
-          },
-          "sel": "#app [data-figure-formula-heat=\"fyb\"]"
-        },
-        "slot:basicMomentBg": {
-          "kind": "abs",
-          "label": "10 下方弯矩图",
-          "props": {
-            "kh": 42.841,
-            "kw": 78.1551,
-            "lvw": 5.2636
-          },
-          "sel": "#app .force-free-canvas > [data-element-slot=\"basicMomentBg\"]"
-        },
-        "slot:basicStructure": {
-          "kind": "abs",
-          "label": "07 基本体系图",
-          "props": {
-            "kh": 42.841,
-            "kw": 78.1551,
-            "lvw": 47.6681,
-            "tvw": 24.4745
-          },
-          "sel": "#app .force-free-canvas > [data-element-slot=\"basicStructure\"]"
         }
       },
       "A2-0": {
@@ -821,6 +710,22 @@ window.BEAM_LAYOUT_OVERRIDES = {
             "tvw": 4.3269
           },
           "sel": "#app .force-free-canvas > [data-compare-slot-heat=\"topStructure\"]"
+        },
+        "storyTitle": {
+          "kind": "text",
+          "label": "标题",
+          "props": {},
+          "sel": "#app .force-story > h1",
+          "text": "荷载作用"
+        }
+      },
+      "A2-1": {
+        "storyTitle": {
+          "kind": "text",
+          "label": "标题",
+          "props": {},
+          "sel": "#app .force-story > h1",
+          "text": "温度变化"
         }
       },
       "A2-2": {
@@ -867,6 +772,13 @@ window.BEAM_LAYOUT_OVERRIDES = {
           },
           "sel": "#app .force-free-canvas > [data-element-slot=\"basicStructure\"]"
         },
+        "storyTitle": {
+          "kind": "text",
+          "label": "标题",
+          "props": {},
+          "sel": "#app .force-story > h1",
+          "text": "回忆第四章：弯曲变形的两个来源"
+        },
         "thermalFormulaHeat": {
           "kind": "figureFormula",
           "label": "紫色温度位移公式",
@@ -879,15 +791,6 @@ window.BEAM_LAYOUT_OVERRIDES = {
         }
       },
       "A2-3": {
-        "controlCard": {
-          "kind": "panel",
-          "label": "滑块卡片",
-          "props": {
-            "dx": -7,
-            "dy": 2
-          },
-          "sel": "#app .force-control"
-        },
         "formula": {
           "kind": "abstext",
           "label": "位移公式",
@@ -927,6 +830,13 @@ window.BEAM_LAYOUT_OVERRIDES = {
             "wvw": 24.6204
           },
           "sel": "#app .force-free-canvas > [data-element-slot=\"basicStructure\"]"
+        },
+        "storyTitle": {
+          "kind": "text",
+          "label": "标题",
+          "props": {},
+          "sel": "#app .force-story > h1",
+          "text": "将&ensp;温度位移公式&ensp;纳入力法方程"
         }
       },
       "A2-4": {
@@ -969,6 +879,13 @@ window.BEAM_LAYOUT_OVERRIDES = {
             "wvw": 24.6204
           },
           "sel": "#app .force-free-canvas > [data-element-slot=\"basicStructure\"]"
+        },
+        "storyTitle": {
+          "kind": "text",
+          "label": "标题",
+          "props": {},
+          "sel": "#app .force-story > h1",
+          "text": "将&ensp;温度位移公式&ensp;纳入力法方程"
         },
         "zeroLabel": {
           "kind": "abstext",
@@ -1135,6 +1052,34 @@ window.BEAM_LAYOUT_OVERRIDES = {
         }
       },
       "E": {
+        "leftTitle": {
+          "kind": "text",
+          "label": "左栏标题",
+          "props": {},
+          "sel": "#app .hero > article.panel > h1",
+          "text": "平衡方程与温度变化无关，所以温度变化时超静定结构不产生内力，你同意吗?"
+        },
+        "pick:#app button[data-vote=\"agree\"] > span": {
+          "kind": "text",
+          "label": "span「三组都是」",
+          "props": {},
+          "sel": "#app button[data-vote=\"agree\"] > span",
+          "text": "同意"
+        },
+        "pick:#app button[data-vote=\"doubt\"] > span": {
+          "kind": "text",
+          "label": "span「只有其中一组是」",
+          "props": {},
+          "sel": "#app button[data-vote=\"doubt\"] > span",
+          "text": "不同意"
+        },
+        "pick:#app button[data-vote=\"unsure\"] > span": {
+          "kind": "text",
+          "label": "span「不一定在这三组里」",
+          "props": {},
+          "sel": "#app button[data-vote=\"unsure\"] > span",
+          "text": "不确定"
+        },
         "pick:#app div.candidate-heading > span:nth-child(2)": {
           "kind": "text",
           "label": "span「FxA = 0」",
@@ -1182,6 +1127,13 @@ window.BEAM_LAYOUT_OVERRIDES = {
             "dx": -24
           },
           "sel": "#app div.candidate-row:nth-child(4) > span:nth-child(3)"
+        },
+        "rightTitle": {
+          "kind": "text",
+          "label": "右栏标题",
+          "props": {},
+          "sel": "#app .hero > aside.panel > h2",
+          "text": "静力平衡方程"
         }
       },
       "E-FB": {
@@ -1228,6 +1180,29 @@ window.BEAM_LAYOUT_OVERRIDES = {
         }
       },
       "G:A1": {
+        "arrowLabelLeftHeat": {
+          "kind": "abstext",
+          "label": "箭头左侧「内力等效」",
+          "props": {
+            "kh": 4.9892,
+            "kw": 0.3254,
+            "text": 150,
+            "tvw": 3.0737
+          },
+          "sel": "#app [data-arrow-label-heat=\"left\"]"
+        },
+        "arrowLabelRightHeat": {
+          "kind": "abstext",
+          "label": "箭头右侧「变形协调」",
+          "props": {
+            "color": 2380954,
+            "kh": 4.9892,
+            "kw": 0.3254,
+            "text": 150,
+            "tvw": 3.0739
+          },
+          "sel": "#app [data-arrow-label-heat=\"right\"]"
+        },
         "captionTop": {
           "kind": "abstext",
           "label": "上方图注",
@@ -1539,7 +1514,7 @@ window.BEAM_LAYOUT_OVERRIDES = {
           "kind": "box",
           "label": "三个选项按钮",
           "props": {
-            "hpx": 170
+            "hpx": 157
           },
           "sel": "#app .options > .option"
         },
@@ -1547,6 +1522,7 @@ window.BEAM_LAYOUT_OVERRIDES = {
           "kind": "group",
           "label": "选项组",
           "props": {
+            "hpx": 501,
             "text": 160
           },
           "sel": "#app .options"
@@ -1641,11 +1617,11 @@ window.BEAM_LAYOUT_OVERRIDES = {
       }
     }
   },
-  "savedAt": "2026-10-11 19:51:15",
+  "savedAt": "2026-10-20 19:21:56",
   "transfer": {
-    "scenario": "beam-width-double-heat",
     "B": 4,
     "C": 0,
+    "scenario": "beam-width-double-heat",
     "texts": {
       "A": [],
       "B": [
