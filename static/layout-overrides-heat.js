@@ -1,4 +1,4 @@
-// BEAM LAB 版面调试保存的配置（由「版面调试」窗口自动生成，2026-10-22 08:25:09）
+// BEAM LAB 版面调试保存的配置（由「版面调试」窗口自动生成，2026-10-22 15:54:57）
 // 放在 static 文件夹里，teacher.html 和 student.html 会自动读取。
 // "wide" "medium" "narrow" 是教师版（按宽度分档），"phone" 是学生页的手机版面。
 // 想恢复默认版面：把 "regimes" 后面的内容改成 {}，或在版面调试里重置后再保存。
@@ -1592,6 +1592,13 @@ window.BEAM_LAYOUT_OVERRIDES = {
         }
       },
       "M": {
+        "pick:#app button[data-transfer-choice=\"B\"] > span > small": {
+          "kind": "text",
+          "label": "small「Δ1P = 0，计算 δ11」",
+          "props": {},
+          "sel": "#app button[data-transfer-choice=\"B\"] > span > small",
+          "text": "<i>Δ</i><sub>1P</sub> = 0，计算 <i>δ</i><sub>11</sub> 和 <i>F</i><sub>yB</sub>"
+        },
         "tfCount": {
           "kind": "box",
           "label": "M：人数（+1、+2）",
@@ -1599,6 +1606,13 @@ window.BEAM_LAYOUT_OVERRIDES = {
             "text": 75
           },
           "sel": "#app .transfer-count"
+        },
+        "tfTitle": {
+          "kind": "text",
+          "label": "M：题目",
+          "props": {},
+          "sel": "#app .transfer-head h1",
+          "text": "梁截面宽度加倍，求解过程哪里需要修改？"
         }
       },
       "WAIT": {
@@ -1645,7 +1659,7 @@ window.BEAM_LAYOUT_OVERRIDES = {
       }
     }
   },
-  "savedAt": "2026-10-22 08:25:09",
+  "savedAt": "2026-10-22 15:54:57",
   "transfer": {
     "B": 4,
     "C": 0,
@@ -1654,7 +1668,7 @@ window.BEAM_LAYOUT_OVERRIDES = {
       "A": [],
       "B": [
         "更新 <i>EI</i>，重新计算。",
-        "δ<sub>11</sub> 减半。",
+        "<i>δ</i><sub>11</sub> 减半。",
         "反力位移项减半，温度位移不变。",
         "2<i>F</i><sub>yB</sub> 改为 <i>F</i><sub>yB</sub>。"
       ],
