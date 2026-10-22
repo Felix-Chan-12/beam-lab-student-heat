@@ -1,4 +1,4 @@
-// BEAM LAB 版面调试保存的配置（由「版面调试」窗口自动生成，2026-10-20 19:21:56）
+// BEAM LAB 版面调试保存的配置（由「版面调试」窗口自动生成，2026-10-22 08:25:09）
 // 放在 static 文件夹里，teacher.html 和 student.html 会自动读取。
 // "wide" "medium" "narrow" 是教师版（按宽度分档），"phone" 是学生页的手机版面。
 // 想恢复默认版面：把 "regimes" 后面的内容改成 {}，或在版面调试里重置后再保存。
@@ -711,6 +711,16 @@ window.BEAM_LAYOUT_OVERRIDES = {
           },
           "sel": "#app .force-free-canvas > [data-compare-slot-heat=\"topStructure\"]"
         },
+        "integrationArrowHeat": {
+          "kind": "figureArrow",
+          "label": "图乘引导箭头（直线／拐弯共用）",
+          "props": {
+            "color": 0,
+            "formulaX": 710.6,
+            "formulaY": 346.8
+          },
+          "sel": "#app [data-integration-arrow-heat]"
+        },
         "storyTitle": {
           "kind": "text",
           "label": "标题",
@@ -720,6 +730,24 @@ window.BEAM_LAYOUT_OVERRIDES = {
         }
       },
       "A2-1": {
+        "integrationArrowHeat": {
+          "kind": "figureArrow",
+          "label": "图乘引导箭头（直线／拐弯共用）",
+          "props": {
+            "color": 0,
+            "formulaX": 710.6,
+            "formulaY": 346.8
+          },
+          "sel": "#app [data-integration-arrow-heat]"
+        },
+        "pick:#app g:nth-child(6) > g:nth-child(2) > path:nth-child(2)": {
+          "kind": "text",
+          "label": "path",
+          "props": {
+            "color": 16639
+          },
+          "sel": "#app g:nth-child(6) > g:nth-child(2) > path:nth-child(2)"
+        },
         "storyTitle": {
           "kind": "text",
           "label": "标题",
@@ -1617,7 +1645,7 @@ window.BEAM_LAYOUT_OVERRIDES = {
       }
     }
   },
-  "savedAt": "2026-10-20 19:21:56",
+  "savedAt": "2026-10-22 08:25:09",
   "transfer": {
     "B": 4,
     "C": 0,

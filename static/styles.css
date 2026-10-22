@@ -973,3 +973,8 @@ body:not(.layout-mode) .method-equation-title-heat { font-size: calc(var(--text-
   .deformation-story .force-controls { position: relative; }
   .deformation-story .cc-card-heat { position: absolute; z-index: 3; top: 8px; left: 0; right: 14px; }
 }
+
+/* A2 integration arrows: one shared position and geometry for both reveal states. */
+.integration-arrow-heat { --heat-formula-x: 693px; --heat-formula-y: 348px; --heat-formula-scale: 1; --heat-arrow-length: 145; --heat-arrow-stroke: 8; color: #f71927; fill: currentColor; stroke-width: var(--heat-arrow-stroke); transform: translate(var(--heat-formula-x), var(--heat-formula-y)) scale(var(--heat-formula-scale)); }
+.integration-arrow-stem-heat { transform: scaleY(calc((var(--heat-arrow-length) - 38) / 107)); }
+.integration-arrow-end-heat { transform: translateY(calc((var(--heat-arrow-length) - 38) * 1px)); }

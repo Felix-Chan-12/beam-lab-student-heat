@@ -131,6 +131,8 @@
     text: { label: "文字大小", unit: "%", min: 30, max: 300, step: 1, digits: 0 },
     // 文字颜色：存成 0xRRGGBB 整数（和其它数值一样存、一样撤销），窗口里用取色框。
     color: { label: "文字颜色", unit: "", min: 0, max: 16777215, step: 1, digits: 0 },
+    arrowLength: { label: "箭头长度", unit: "图内px", min: 45, max: 600, step: 1, digits: 0 },
+    arrowStroke: { label: "线条粗细", unit: "图内px", min: 1, max: 30, step: 1, digits: 0 },
     formulaX: { label: "图内 X 坐标", unit: "px", min: -1000, max: 6200, step: 1, digits: 1 },
     formulaY: { label: "图内 Y 坐标", unit: "px", min: -500, max: 2200, step: 1, digits: 1 },
     formulaScale: { label: "公式大小", unit: "%", min: 10, max: 400, step: 1, digits: 1 },
@@ -179,6 +181,7 @@
     fpanel: ["hpx"],
     guard: ["gsize"],
     figureFormula: ["formulaX", "formulaY", "formulaScale"],
+    figureArrow: ["formulaX", "formulaY", "formulaScale", "arrowLength", "arrowStroke", "color"],
   };
   // 画布里（绝对定位）的元素：坐标、宽高存成相对画布的 vw；其他元素的坐标存成相对原位置的移动量（dx、dy）。
   const CANVAS_KINDS = new Set(["abs", "abstext", "arrow", "bar"]);
@@ -191,6 +194,7 @@
     bar: ["left", "top", "width"],
     label: ["text"],
     figureFormula: ["formulaX", "formulaY", "formulaScale"],
+    figureArrow: ["formulaX", "formulaY", "formulaScale", "arrowLength", "arrowStroke", "color"],
     box: ["frameInterval"],
   };
 
@@ -214,6 +218,7 @@
     fpanel: { h: "hpx" },
     guard: { both: "gsize" },
     figureFormula: { scale: "formulaScale" },
+    figureArrow: { scale: "formulaScale" },
   };
 
   const KIND_TIPS = {
@@ -228,6 +233,7 @@
     comp: "右栏宽度只在显示右侧控制栏的页面有效。",
     fpanel: "银色面板的高度（拖下边也行）。屏幕跟着变矮或变高，整个外框始终正好一屏。",
     guard: "两个护角一起调大小（拖右下角 ◢ 也行）；阶段名和右边的按钮会跟着让开。",
+    figureArrow: "位置、大小、长度、粗细和颜色同时作用于直箭头与拐弯箭头，切换圆球时主干不移动。坐标和长度以图片原始像素为单位。拖动箭头可移动，拖右下角可缩放。",
     figureFormula: "坐标原点是图片左上角，单位为原图 px；图片缩放时公式跟着一起缩放。拖公式或 ✥ 移动，拖右下角 ◢ 调整公式大小。",
   };
 
@@ -324,6 +330,7 @@
     { key: "loadIntegrationHeat", label: "A2-0 荷载作用图乘图", sel: '#app [data-step-figure-heat="loadIntegration"]', kind: "box" },
     { key: "thermalIntegrationHeat", label: "A2-1 温度作用图乘图", sel: '#app [data-step-figure-heat="thermalIntegration"]', kind: "box" },
     { key: "bendSourcesHeat", label: "A2-2 弯曲变形的两个来源", sel: '#app [data-step-figure-heat="bendSources"]', kind: "box" },
+    { key: "integrationArrowHeat", label: "图乘引导箭头（直线／拐弯共用）", sel: "#app [data-integration-arrow-heat]", kind: "figureArrow" },
     { key: "revealCardHeat", label: "A2-0／A2-1 三个圆球卡片", sel: "#app .reveal-card-heat", kind: "panel" },
     { key: "bendStepperHeat", label: "A2-2 圆球", sel: '#app [data-step-figure-heat="bendSources"] > [data-reveal-stepper-heat]', kind: "box" },
     { key: "ccCardHeat", label: "A2-4 五个圆球卡片", sel: "#app .cc-card-heat", kind: "panel" },
@@ -717,6 +724,8 @@
     if (p.formulaX != null) d.push(`--heat-formula-x: ${p.formulaX}px${I}`);
     if (p.formulaY != null) d.push(`--heat-formula-y: ${p.formulaY}px${I}`);
     if (p.formulaScale != null) d.push(`--heat-formula-scale: ${round(p.formulaScale / 100, 4)}${I}`);
+    if (p.arrowLength != null) d.push(`--heat-arrow-length: ${p.arrowLength}${I}`);
+    if (p.arrowStroke != null) d.push(`--heat-arrow-stroke: ${p.arrowStroke}${I}`);
     if (p.frameInterval != null) d.push(`--heat-frame-interval: ${p.frameInterval}${I}`);
     if (entry.img && entry.ratioVar && entry.imgRatio) d.push(`--element-ratio: ${round(entry.imgRatio, 5)}${I}`);
     return d.join("; ");
@@ -1794,6 +1803,8 @@
         case "formulaX": return px(cs.getPropertyValue("--heat-formula-x"));
         case "formulaY": return px(cs.getPropertyValue("--heat-formula-y"));
         case "formulaScale": return (parseFloat(cs.getPropertyValue("--heat-formula-scale")) || 1) * 100;
+        case "arrowLength": return parseFloat(cs.getPropertyValue("--heat-arrow-length")) || 145;
+        case "arrowStroke": return parseFloat(cs.getPropertyValue("--heat-arrow-stroke")) || 8;
         case "frameInterval": return parseFloat(cs.getPropertyValue("--heat-frame-interval")) || 0.2;
         case "color": { const m = String(cs.color).match(/\d+(\.\d+)?/g) || [0, 0, 0]; return (Math.round(m[0]) << 16) + (Math.round(m[1]) << 8) + Math.round(m[2]); }
         case "left": return px(cs.left) / (containerOf(node).clientWidth || 1) * 100;
@@ -1928,6 +1939,8 @@
       const rootEl = ctx.pickRoot();
       if (!node || !rootEl || !(node === rootEl || rootEl.contains(node))) return null;
       if (node.closest(".beam-layout-tuner")) return null;
+      const integrationArrow = node.closest("[data-integration-arrow-heat]");
+      if (integrationArrow) return integrationArrow;
       const figureFormula = node.closest("[data-figure-formula-heat]");
       if (figureFormula) return figureFormula;
       while (node !== rootEl && (INLINE_TAGS.has(node.tagName) || (node.closest(".fraction") && node !== node.closest(".fraction")) || node.classList.contains("math-variable"))) node = node.parentElement;
@@ -1954,6 +1967,7 @@
 
     /* 文字与图片 */
     function textEditable(node) {
+      if (node?.matches("[data-integration-arrow-heat]")) return false;
       if (!node || node === appEl || node === document.body) return false;
       if (/^(IMG|CANVAS|INPUT|SELECT|TEXTAREA|IFRAME|SVG)$/i.test(node.tagName)) return false;
       if (node.closest(DYNAMIC_SEL) || node.querySelector(DYNAMIC_SEL)) return false;
@@ -2155,7 +2169,11 @@
       schedulePost();
     }
     function rowHtml(def, prop) {
-      const meta = PROPS[prop];
+      const meta = { ...PROPS[prop] };
+      if (def.kind === "figureArrow") {
+        if (prop === "color") meta.label = "箭头颜色";
+        if (prop === "formulaScale") meta.label = "箭头大小";
+      }
       if (prop === "color") {
         return `<div class="prop" data-prop="color">
         <span class="name">${meta.label}</span>
@@ -2391,7 +2409,7 @@
       const container = containerOf(node);
       beginEdit(`drag|${def.key}|${mode}`, true);
       if (mode === "move") {
-        if (def.kind === "figureFormula") {
+        if (def.kind === "figureFormula" || def.kind === "figureArrow") {
           const matrix = node.parentElement.getScreenCTM();
           if (!matrix) return;
           values.formulaMatrix = matrix.inverse();

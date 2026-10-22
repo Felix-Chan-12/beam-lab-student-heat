@@ -1197,6 +1197,22 @@ const REVEAL_BLOCKS_HEAT = [
 function revealBlocksSvgHeat() {
   return REVEAL_BLOCKS_HEAT.map((d, index) => `<path class="reveal-block-heat" data-reveal-block-heat="${index + 1}" d="${d}" fill="#fff"/>`).join("");
 }
+// A2-0 / A2-1 share a fixed arrow stem; only the final segment and head change.
+function integrationArrowSvgHeat() {
+  return `<g class="integration-arrow-heat" data-integration-arrow-heat style="display:none" aria-hidden="true">
+    <path class="integration-arrow-stem-heat" d="M0 0 V107" fill="none" stroke="currentColor" stroke-linecap="round"/>
+    <g class="integration-arrow-end-heat">
+      <g data-integration-arrow-tip-heat="straight">
+        <path d="M0 0 V20" fill="none" stroke="currentColor"/>
+        <path d="M-17 -4 L0 38 L17 -4 L0 6 Z"/>
+      </g>
+      <g data-integration-arrow-tip-heat="bent" style="display:none">
+        <path d="M0 0 V25 H45" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M25 8 L68 25 L25 42 L35 25 Z"/>
+      </g>
+    </g>
+  </g>`;
+}
 // 一排圆球（count 个）：stage 0 一个都没点，k 表示点到第 k 个。一个圆球时点一下切换。
 function revealStepperHtmlHeat(count, label, target = "") {
   const dots = Array.from({ length: count }, (_, index) => {
@@ -1231,6 +1247,12 @@ function setRevealStageHeat(stepper, stage, figure = null) {
   target.querySelectorAll("[data-reveal-block-heat]").forEach(block => {
     block.style.display = value >= Number(block.dataset.revealBlockHeat) ? "none" : "";
   });
+  const integrationArrow = target.querySelector("[data-integration-arrow-heat]");
+  if (integrationArrow) {
+    integrationArrow.style.display = value >= 2 ? "" : "none";
+    integrationArrow.querySelector('[data-integration-arrow-tip-heat="straight"]').style.display = value === 2 ? "" : "none";
+    integrationArrow.querySelector('[data-integration-arrow-tip-heat="bent"]').style.display = value >= 3 ? "" : "none";
+  }
   target.querySelectorAll("[data-reveal-swap-heat]").forEach(image => {
     image.hidden = Number(image.dataset.revealSwapHeat) !== Math.min(value, 1);
   });
@@ -1295,6 +1317,7 @@ function stepFigureHtmlHeat(kind) {
     content = `<svg viewBox="0 0 1600 830" role="img" aria-label="${figure.alt}">
       <image href="${runtimeUrl(figure.src)}" width="1600" height="830"/>
       ${revealBlocksSvgHeat()}
+      ${integrationArrowSvgHeat()}
     </svg>`;
   } else if (kind === "thermalIntegration") {
     const beam = AI_FIGURE_BEAM_HEAT;
@@ -1311,6 +1334,7 @@ function stepFigureHtmlHeat(kind) {
         </g>
       </g>
       ${revealBlocksSvgHeat()}
+      ${integrationArrowSvgHeat()}
     </svg>`;
   } else if (kind === "bendSources") {
     content = `<img data-reveal-swap-heat="0" src="${runtimeUrl(figure.before)}" alt="${figure.alt}（点圆球前）"/>
