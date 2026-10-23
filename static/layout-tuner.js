@@ -334,6 +334,7 @@
     { key: "revealCardHeat", label: "A2-0／A2-1 三个圆球卡片", sel: "#app .reveal-card-heat", kind: "panel" },
     { key: "bendStepperHeat", label: "A2-2 圆球", sel: '#app [data-step-figure-heat="bendSources"] > [data-reveal-stepper-heat]', kind: "box" },
     { key: "ccCardHeat", label: "A2-4 五个圆球卡片", sel: "#app .cc-card-heat", kind: "panel" },
+    { key: "formulaCardHeat", label: "A2-3／A2-4 力法方程圆球卡片", sel: "#app .formula-card-heat", kind: "panel" },
     { key: "ccSlidesHeat", label: "A2-4 示意图（cc-slide）", sel: "#app [data-cc-slides-heat]", kind: "box" },
     { key: "tfStory", label: "M：整块面板", sel: "#app > .transfer-story", kind: "panel" },
     { key: "tfHead", label: "M：题目区", sel: "#app .transfer-head", kind: "group" },

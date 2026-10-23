@@ -991,17 +991,44 @@ function updateDeformationFormulaValue(step, r) {
   if (formula && step >= 2) formula.innerHTML = deformationFormulaHtml(step, r);
 }
 
+// heat：A2-3（原步号 4）、A2-4（原步号 5）底部的力法方程，一行一张 SVG（static/assets/force-story/a2-3-formula-heat-1～4.svg、a2-4-formula-heat-1～2.svg）。
+// 进页是第一行；A2-3 右侧三个圆球：点第 1 个 → 第一项换成 l³/(3EI)·FyB，第 2 个 → 中间项换成 0，第 3 个 → 最后一项换成 (−4.5 mm)；
+// A2-4 右侧一个圆球：点一下，最后一项换成 Δ1T，再点回到第一行。
+const FORMULA_ROWS_HEAT = {
+  4: [
+    ["a2-3-formula-heat-1.svg", "δ11·FyB + Δ1P + αΔt·l²/(2h) = ΔB"],
+    ["a2-3-formula-heat-2.svg", "l³/(3EI)·FyB + Δ1P + αΔt·l²/(2h) = ΔB"],
+    ["a2-3-formula-heat-3.svg", "l³/(3EI)·FyB + 0 + αΔt·l²/(2h) = ΔB"],
+    ["a2-3-formula-heat-4.svg", "l³/(3EI)·FyB + 0 + (−4.5 mm) = ΔB"],
+  ],
+  5: [
+    ["a2-4-formula-heat-1.svg", "δ11·FyB + Δ1P + αΔt·l²/(2h) = ΔB = 0"],
+    ["a2-4-formula-heat-2.svg", "δ11·FyB + Δ1P + Δ1T = ΔB = 0"],
+  ],
+};
+let formulaStageHeat = 0;
+function applyFormulaStageHeat(value) {
+  formulaStageHeat = value;
+  const card = document.querySelector("[data-formula-card-heat]");
+  const rows = FORMULA_ROWS_HEAT[Number(card?.dataset.formulaStepHeat || 0)];
+  const image = document.querySelector("[data-deformation-formula] .formula-svg-heat");
+  if (!rows || !image) return;
+  const [name, alt] = rows[Math.min(value, rows.length - 1)];
+  const src = runtimeUrl(`/assets/force-story/${name}`);
+  if (image.getAttribute("src") !== src) { image.setAttribute("src", src); image.alt = `力法方程：${alt}`; }
+}
+
 function deformationFormulaHtml(step, r = deformationBasicX1) {
   // heat：全节沿 FyB（向上）为正。温度引起的 B 点位移 Δ1t = −αΔt·l²/(2h) = −4.5 mm（向下）；B 点总位移 = 4r − 4.5 mm（r 为内部值，FyB = 2r kN）。
   const uniform = '<span class="fraction"><span><i>α</i>Δ<i>t</i><i>l</i><sup>2</sup></span><span>2<i>h</i></span></span>';
   const fyb = '<span class="fraction"><span><i>l</i><sup>3</sup></span><span>3<i>E</i><i>I</i></span></span><i>F</i><sub><i>yB</i></sub>';
   if (step === 2) return fyb;
   if (step === 3) return `&minus;${uniform} = &minus;4.5 mm`;
-  // heat：A2-3、A2-4 的力法方程是整张 SVG（static/assets/force-story/a2-3-formula-heat.svg、a2-4-formula-heat.svg）
+  // heat：A2-3、A2-4 的力法方程是整张 SVG，按右侧圆球逐行改写（见 FORMULA_ROWS_HEAT）
   if (step === 4 || step === 5) {
-    const name = step === 4 ? "a2-3-formula-heat.svg" : "a2-4-formula-heat.svg";
-    const alt = `力法方程：l³/(3EI)·FyB + 0 + (−αΔt·l²/(2h) = −4.5 mm) = ΔB${step === 5 ? " = 0" : ""}`;
-    return `<img class="formula-svg-heat" src="${runtimeUrl(`/assets/force-story/${name}`)}" alt="${alt}"/>`;
+    const rows = FORMULA_ROWS_HEAT[step];
+    const [name, alt] = rows[Math.min(formulaStageHeat, rows.length - 1)];
+    return `<img class="formula-svg-heat" src="${runtimeUrl(`/assets/force-story/${name}`)}" alt="力法方程：${alt}"/>`;
   }
   const combined = `Δ<sub>B</sub> = <span class="formula-fyb-heat">${fyb}</span> + <span class="formula-thermal-heat">(&minus;${uniform} = &minus;4.5 mm)</span>`;
   if (step === 4) return combined;
@@ -1055,6 +1082,18 @@ function updateDeformationReveal(state) {
     if (ccStepper && (!onCcPage || ccCard.hidden)) setRevealStageHeat(ccStepper, 0);
     ccCard.hidden = !onCcPage;
   }
+  // heat：A2-3 三个圆球、A2-4 一个圆球，逐行改写底部的力法方程（每次进入都从第一行开始）
+  const formulaStep = Number(state.stage) === 3 ? ({ 3: 4, 4: 5 }[Number(state.deformation_reveal_step)] || 0) : 0;
+  const formulaCard = story.querySelector("[data-formula-card-heat]");
+  if (formulaCard) {
+    if (formulaCard.dataset.formulaStepHeat !== String(formulaStep)) {
+      formulaCard.dataset.formulaStepHeat = String(formulaStep);
+      formulaCard.innerHTML = formulaStep ? revealStepperHtmlHeat(FORMULA_ROWS_HEAT[formulaStep].length - 1, formulaStep === 4 ? "逐项写出力法方程（1～3）" : "温度位移记作 Δ1T", "formula") : "";
+      bindRevealSteppersHeat(formulaCard);
+      applyFormulaStageHeat(0);
+    }
+    formulaCard.hidden = !formulaStep;
+  }
   updateMethodStepsHeat(Number(state.stage) === 2 ? Number(state.force_reveal_step || 0) : -1);
 }
 
@@ -1104,6 +1143,7 @@ function renderDeformation() {
       ${methodStepsHtmlHeat()}
       <div class="force-controls">
         <aside class="control-card cc-card-heat" data-cc-card-heat hidden>${revealStepperHtmlHeat(5, "逐张查看示意图（1～5）", "cc")}</aside>
+        <aside class="control-card formula-card-heat" data-formula-card-heat hidden></aside>
         <aside class="control-card force-control"><div class="range-row"><input data-force-slider data-force-channel="basic" type="range" min="0" max="2.5" step="0.005" value="0" aria-label="切开链杆后FyB滑块"/><strong data-force-value></strong></div><div data-force-readouts></div><p class="hint">上下滑块同步，两组内力图同步变化。</p></aside>
         <aside class="control-card ai-figure-card-heat" data-ai-figure-heat hidden><section class="ai-deformation-card"><div class="ai-deformation-heading"><span>AI</span><strong>辅助生成整梁变形</strong></div><button type="button" class="primary ai-deformation-button" data-ai-figure-button>启动 AI 辅助计算</button><small data-ai-figure-status>逐点计算 · 计算 26 个采样点位移</small></section></aside>
         <aside class="control-card reveal-card-heat" data-reveal-card-heat hidden>${revealStepperHtmlHeat(3, "逐块查看图乘（1～3）")}</aside>
@@ -1241,6 +1281,7 @@ function setRevealStageHeat(stepper, stage, figure = null) {
   if (range && Number(range.value) !== Math.max(1, value)) range.value = String(Math.max(1, value));
   stepper.querySelector("[data-reveal-single-heat]")?.setAttribute("aria-pressed", String(value > 0));
   if (stepper.dataset.revealTargetHeat === "cc") { applyCcSlideHeat(stepper.closest(".force-story"), value); return; }
+  if (stepper.dataset.revealTargetHeat === "formula") { applyFormulaStageHeat(value); return; }
   const target = figure || stepper.closest("[data-step-figure-heat]")
     || stepper.closest(".force-story")?.querySelector("[data-step-figure-heat]:not([hidden])");
   if (!target) return;

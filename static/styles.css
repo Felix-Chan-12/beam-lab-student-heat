@@ -973,6 +973,13 @@ body:not(.layout-mode) .method-equation-title-heat { font-size: calc(var(--text-
   .deformation-story .force-controls { position: relative; }
   .deformation-story .cc-card-heat { position: absolute; z-index: 3; top: 8px; left: 0; right: 14px; }
 }
+/* A2-3、A2-4：右侧的力法方程圆球（A2-3 三个，A2-4 一个），点了逐行改写底部的力法方程；A2-4 放在五个圆球卡片下面 */
+.formula-card-heat { padding: 18px 16px; }
+.formula-card-heat[hidden] { display: none !important; }
+@media (min-width: 781px) {
+  .deformation-story .formula-card-heat { position: absolute; z-index: 3; top: 8px; left: 0; right: 14px; }
+  .deformation-story .cc-card-heat:not([hidden]) ~ .formula-card-heat { top: 104px; }
+}
 
 /* A2 integration arrows: one shared position and geometry for both reveal states. */
 .integration-arrow-heat { --heat-formula-x: 693px; --heat-formula-y: 348px; --heat-formula-scale: 1; --heat-arrow-length: 145; --heat-arrow-stroke: 8; color: #f71927; fill: currentColor; stroke-width: var(--heat-arrow-stroke); transform: translate(var(--heat-formula-x), var(--heat-formula-y)) scale(var(--heat-formula-scale)); }
