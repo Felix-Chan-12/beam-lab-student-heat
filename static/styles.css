@@ -985,3 +985,9 @@ body:not(.layout-mode) .method-equation-title-heat { font-size: calc(var(--text-
 .integration-arrow-heat { --heat-formula-x: 693px; --heat-formula-y: 348px; --heat-formula-scale: 1; --heat-arrow-length: 145; --heat-arrow-stroke: 8; color: #f71927; fill: currentColor; stroke-width: var(--heat-arrow-stroke); transform: translate(var(--heat-formula-x), var(--heat-formula-y)) scale(var(--heat-formula-scale)); }
 .integration-arrow-stem-heat { transform: scaleY(calc((var(--heat-arrow-length) - 38) / 107)); }
 .integration-arrow-end-heat { transform: translateY(calc((var(--heat-arrow-length) - 38) * 1px)); }
+
+/* 翻页笔开关（2026-10-23）：放大预览底部中间那行「BEAM LAB」小字上叠一个透明按钮，点一下打开或关闭；打开时小字变浅橙。只在放大预览里出现，控制台视图看不到。 */
+#teacherCockpit .clicker-toggle { display: none; }
+body.beam-frame #teacherCockpit.preview-focus > .teacher-command-bar > .clicker-toggle { display: block; position: absolute; z-index: 2; left: 50%; bottom: 0; transform: translateX(-50%);
+  width: 140px; min-width: 0; height: calc(var(--fr-brand) * 1.6 + 8px); min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; outline: none; cursor: pointer; }
+body.beam-frame #teacherCockpit.preview-focus.clicker-on > .teacher-command-bar::before { color: #e8955f; }
