@@ -2972,8 +2972,62 @@ function clickerTargetOf(state, dir) {
   if (step > 0) return { stage, step: step - 1 };
   return stage > 0 ? { stage: stage - 1, step: lastOf(stage - 1) } : null;
 }
+// heat（2026-10-24）：圆球之后再按，依次做——A1-3 点「2. 列力法方程」；A1-4 四个圆之后「回到 1」「回到 2」；
+// A2-1 三个圆之后点 AI；A2-3 三个圆之后滑一遍 F_yB。
+const CLICKER_EXTRA_PAGES = { "A1-3": ["equation"], "A1-4": ["method:1", "method:2"], "A2-1": ["ai"], "A2-3": ["sweep"] };
+function clickerPageKey(state = currentState) {
+  const stage = Number(state?.stage);
+  if (stage === 2) return `A1-${Number(state.force_reveal_step || 0)}`;
+  if (stage === 3) return `A2-${Number(state.deformation_reveal_step || 0)}`;
+  return "";
+}
+function clickerExtraDone(kind) {
+  if (kind === "equation") return a13EquationShownHeat;
+  if (kind === "ai") return aiFigureDoneHeat || Boolean(aiFigureFrameHeat);
+  return false;
+}
+// 不花时间的动作（往回翻落到这一页时也直接做完）
+function clickerQuickExtra(kind) {
+  if (kind === "equation") {
+    a13EquationShownHeat = true;
+    forceStoryboardRefresh?.();
+    return () => { a13EquationShownHeat = false; forceStoryboardRefresh?.(); };
+  }
+  if (kind.startsWith("method:")) {
+    const figure = [...document.querySelectorAll('[data-step-figure-heat="methodStrip"]')].find((el) => el.getClientRects().length > 0);
+    if (!figure) return null;
+    const from = Number(figure.dataset.methodStageHeat || 0);
+    setMethodStripStageHeat(figure, Number(kind.slice(7)));
+    return () => setMethodStripStageHeat(figure, from);
+  }
+  return undefined;
+}
+async function clickerRunExtra(kind) {
+  const quick = clickerQuickExtra(kind);
+  if (quick !== undefined) return quick;
+  if (kind === "ai") {
+    document.querySelector("[data-ai-figure-button]")?.click();
+    return () => resetAiFigureHeat();
+  }
+  if (kind === "sweep") {
+    const slider = clickerVisibleSlider("[data-force-slider]");
+    const from = await clickerSweep(slider);
+    return () => clickerSetSlider(slider, from);
+  }
+  return null;
+}
+async function clickerLocal(dir) {
+  if (dir > 0) {
+    if (!clickerExtra.done || clickerExtra.key !== clickerPageKey()) {
+      if (clickerDotsLocal(dir)) return true;
+    }
+    return clickerExtraStep(dir);
+  }
+  if (await clickerExtraStep(dir)) return true;
+  return clickerDotsLocal(dir);
+}
 // heat：本页的圆球。toEnd 为真时直接点到最后一个（往回翻到上一页时用）。
-function clickerLocal(dir, toEnd = false) {
+function clickerDotsLocal(dir, toEnd = false) {
   const shown = (el) => el.getClientRects().length > 0;
   const method = [...document.querySelectorAll('[data-step-figure-heat="methodStrip"]')].find(shown);
   if (method) {
@@ -2993,7 +3047,101 @@ function clickerLocal(dir, toEnd = false) {
   return true;
 }
 async function clickerBeforeLanding() {}
-function clickerLanded() { clickerLocal(0, true); }
+// 退到上一页：圆球点到最后；方程、「回到 1、2」这类不花时间的动作也一并做完（AI、滑动不重做，再按会重新做）。
+function clickerLanded() {
+  clickerDotsLocal(0, true);
+  const list = clickerExtraList();
+  if (!list) return;
+  for (const kind of list) {
+    if (clickerExtraDone(kind)) { clickerExtra.undo.push(null); clickerExtra.done += 1; continue; }
+    const undo = clickerQuickExtra(kind);
+    if (undo === undefined) break;
+    clickerExtra.undo.push(undo || (() => {}));
+    clickerExtra.done += 1;
+  }
+}
+// 翻页笔「滑一遍」（2026-10-24）：滑块左右来回几次，最后停在随机位置（离起点至少三成量程，不会只挪一点）。
+// 逐帧改滑块的值并发 input 事件，和用鼠标拖一样，图和读数跟着变。返回起点的值，往回翻时用它还原。
+function clickerSetSlider(slider, value) {
+  if (!slider || value == null || Number.isNaN(Number(value))) return;
+  slider.value = String(value);
+  slider.dispatchEvent(new Event("input", { bubbles: true }));
+}
+function clickerVisibleSlider(selector) {
+  return [...document.querySelectorAll(selector)].find((el) => el.getClientRects().length > 0 && !el.disabled) || null;
+}
+// opts（可选）：lo、hi 限定来回的范围；end() 给出停的位置（每次随机一点，但落在想要的范围里）。
+function clickerPick(list) { return list[Math.floor(Math.random() * list.length)]; }
+function clickerSweep(slider, opts = {}) {
+  return new Promise((resolve) => {
+    if (!slider || slider.disabled) { resolve(null); return; }
+    const min = Number(slider.min || 0), max = Number(slider.max || 1);
+    const lo = Math.max(min, opts.lo ?? min), hi = Math.min(max, opts.hi ?? max), span = (hi - lo) || 1;
+    const step = Number(slider.step) || (max - min) / 200;
+    const digits = (String(step).split(".")[1] || "").length;
+    const from = Number(slider.value);
+    const rand = (a, b) => a + Math.random() * (b - a);
+    const high = () => rand(lo + 0.72 * span, hi), low = () => rand(lo, lo + 0.28 * span);
+    let end = from, guard = 0;
+    if (typeof opts.end === "function") end = opts.end();
+    else while (Math.abs(end - from) < 0.3 * span && guard++ < 200) end = rand(lo + 0.08 * span, hi - 0.08 * span);
+    const points = [from, ...(from < lo + span / 2 ? [high(), low(), high()] : [low(), high(), low()]), end];
+    const legs = [];
+    let total = 0;
+    for (let i = 1; i < points.length; i += 1) {
+      const d = Math.max(550, 1300 * Math.abs(points[i] - points[i - 1]) / ((max - min) || 1)); // 速度按整条滑块算，窄范围来回也不会慢吞吞
+      legs.push({ a: points[i - 1], b: points[i], t0: total, d });
+      total += d;
+    }
+    const ease = (u) => (u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2);
+    const snap = (v) => Math.min(max, Math.max(min, Number((Math.round((v - min) / step) * step + min).toFixed(digits))));
+    let last = null, finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      if (snap(end) !== last) clickerSetSlider(slider, snap(end));
+      resolve(from);
+    };
+    const fallback = setTimeout(finish, total + 2000); // 预览框不在前台、动画停了时也能结束
+    const started = performance.now();
+    const frame = (now) => {
+      if (finished) return;
+      const t = Math.min(total, now - started);
+      const leg = legs.find((l) => t <= l.t0 + l.d) || legs[legs.length - 1];
+      const v = snap(leg.a + (leg.b - leg.a) * ease(Math.min(1, (t - leg.t0) / leg.d)));
+      if (v !== last) { last = v; clickerSetSlider(slider, v); }
+      if (t < total) requestAnimationFrame(frame);
+      else { clearTimeout(fallback); finish(); }
+    };
+    requestAnimationFrame(frame);
+  });
+}
+// 圆球之后的「页内动作」：前进时依次做，后退时依次撤销；换页后重新开始（undo 为 null 的是本来就已做好、跳过的）。
+// clickerPre 是圆球之前的动作（目前只有力法 A1-3 的来回滑），用法相同。
+const clickerExtra = { key: "", done: 0, undo: [] };
+const clickerPre = { key: "", done: 0, undo: [] };
+function clickerExtraList(holder = clickerExtra, table = CLICKER_EXTRA_PAGES) {
+  const key = clickerPageKey();
+  if (holder.key !== key) Object.assign(holder, { key, done: 0, undo: [] });
+  return (table && table[key]) || null;
+}
+async function clickerExtraStep(dir, holder = clickerExtra, table = CLICKER_EXTRA_PAGES) {
+  const list = clickerExtraList(holder, table);
+  if (!list) return false;
+  if (dir > 0) {
+    while (holder.done < list.length && clickerExtraDone(list[holder.done])) { holder.undo.push(null); holder.done += 1; }
+    if (holder.done >= list.length) return false;
+    const undo = await clickerRunExtra(list[holder.done]);
+    holder.undo.push(undo || (() => {}));
+    holder.done += 1;
+    return true;
+  }
+  while (holder.done > 0 && holder.undo[holder.done - 1] === null) { holder.undo.pop(); holder.done -= 1; }
+  if (holder.done === 0) return false;
+  holder.done -= 1;
+  await holder.undo.pop()();
+  return true;
+}
 async function runClicker(dir) {
   const now = Date.now();
   if (clickerBusy || now - clickerLastAt < 250) return;
