@@ -1,4 +1,4 @@
-// BEAM LAB 版面调试保存的配置（由「版面调试」窗口自动生成，2026-10-22 15:54:57）
+// BEAM LAB 版面调试保存的配置（由「版面调试」窗口自动生成，2026-10-25 16:31:46）
 // 放在 static 文件夹里，teacher.html 和 student.html 会自动读取。
 // "wide" "medium" "narrow" 是教师版（按宽度分档），"phone" 是学生页的手机版面。
 // 想恢复默认版面：把 "regimes" 后面的内容改成 {}，或在版面调试里重置后再保存。
@@ -11,31 +11,31 @@ window.BEAM_LAYOUT_OVERRIDES = {
   "canvas": {
     "pages": {
       "A1-0": [
-        1758.2,
+        1834.8,
         759.5
       ],
       "A1-1": [
-        1758.2,
+        1834.8,
         759.5
       ],
       "A1-2": [
-        1758.2,
+        1834.8,
         759.5
       ],
       "A1-3": [
-        1758.2,
+        1834.8,
         759.5
       ],
       "A2-3": [
-        1383,
+        1460,
         759.5
       ],
       "A2-4": [
-        1383,
+        1460,
         759.5
       ]
     },
-    "width": 1767
+    "width": 1844
   },
   "comments": [
     "没有荷载，就是没有力吧。",
@@ -1350,6 +1350,15 @@ window.BEAM_LAYOUT_OVERRIDES = {
           },
           "sel": "#app .endpoint-label"
         },
+        "focusMaskHeat": {
+          "kind": "focusMask",
+          "label": "A2-3／A2-4 聚焦公式的蒙版",
+          "props": {
+            "maskColor": 16777215,
+            "maskOpacity": 90
+          },
+          "sel": "#app [data-focus-mask-heat]"
+        },
         "label:basicFyB": {
           "kind": "label",
           "label": "下方 FyB 数值",
@@ -1659,7 +1668,7 @@ window.BEAM_LAYOUT_OVERRIDES = {
       }
     }
   },
-  "savedAt": "2026-10-22 15:54:57",
+  "savedAt": "2026-10-25 16:31:46",
   "transfer": {
     "B": 4,
     "C": 0,

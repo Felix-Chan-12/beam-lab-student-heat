@@ -993,7 +993,7 @@ function updateDeformationFormulaValue(step, r) {
 
 // heat：A2-3（原步号 4）、A2-4（原步号 5）底部的力法方程，一行一张 SVG（static/assets/force-story/a2-3-formula-heat-1～4.svg、a2-4-formula-heat-1～2.svg）。
 // 进页是第一行；A2-3 右侧三个圆球：点第 1 个 → 第一项换成 l³/(3EI)·FyB，第 2 个 → 中间项换成 0，第 3 个 → 最后一项换成 (−4.5 mm)；
-// A2-4 没有单独的卡片：原来那串五个圆球（cc）前面加一个，共六个；点第 1 个 → 最后一项换成 Δ1T，第 2～6 个 → cc 示意图 1～5（公式保持第二行）。
+// A2-4 没有单独的卡片：原来那串五个圆球（cc）前面加两个，共七个；点第 1 个 → 最后一项换成 Δ1T，第 2 个 → 揭开聚焦公式的蒙版（2026-10-25 加），第 3～7 个 → cc 示意图 1～5（公式保持第二行）。
 const FORMULA_ROWS_HEAT = {
   4: [
     ["a2-3-formula-heat-1.svg", "δ11·FyB + Δ1P + αΔt·l²/(2h) = ΔB"],
@@ -1016,6 +1016,61 @@ function applyFormulaStageHeat(value) {
   const [name, alt] = rows[Math.min(value, rows.length - 1)];
   const src = runtimeUrl(`/assets/force-story/${name}`);
   if (image.getAttribute("src") !== src) { image.setAttribute("src", src); image.alt = `力法方程：${alt}`; }
+}
+
+// heat（2026-10-25）：A2-3、A2-4 的力法方程里，换了值的那一项先放大、升到画布竖向中间附近，停一下，再落回原位（只在教师端）。
+// 三项在公式 SVG 里的位置（SVG 坐标，A2-3 的图宽 1068、A2-4 的图宽 1150，高都是 150）：[x, y, 宽, 高]。
+const FORMULA_TERM_BOXES_HEAT = { 1: [232, 6, 218, 138], 2: [508, 6, 140, 138], 3: [703, 6, 231, 138] };
+const FORMULA_SVG_SIZE_HEAT = { 4: [1068, 150], 5: [1150, 150] };
+// 升起、停留、落回的时间（毫秒）；放大后的高度约为画布高的 30%，最多放大 2.6 倍；升到画布高 45% 的位置。
+const FORMULA_POP_HEAT = { rise: 500, hold: 1400, fall: 600, heightShare: 0.3, maxScale: 2.6, centerY: 0.45 };
+let formulaPopHeat = null;
+function cancelFormulaPopHeat() {
+  if (!formulaPopHeat) return;
+  formulaPopHeat.animation?.cancel();
+  formulaPopHeat.element.remove();
+  formulaPopHeat = null;
+}
+async function popFormulaTermHeat(step, term) {
+  cancelFormulaPopHeat();
+  const box = FORMULA_TERM_BOXES_HEAT[term], size = FORMULA_SVG_SIZE_HEAT[step];
+  const image = document.querySelector("[data-deformation-formula] .formula-svg-heat");
+  const canvas = image?.closest(".force-free-canvas");
+  if (!isPreview || !box || !size || !canvas || typeof Element.prototype.animate !== "function") return;
+  const r = image.getBoundingClientRect(), c = canvas.getBoundingClientRect();
+  if (!r.width || !c.width) return;
+  const s = r.width / size[0];
+  const w = box[2] * s, h = box[3] * s;
+  const cw = canvas.clientWidth, ch = canvas.clientHeight;
+  const k = Math.max(1, Math.min(FORMULA_POP_HEAT.maxScale, ch * FORMULA_POP_HEAT.heightShare / h, cw * 0.45 / w));
+  // 原位（相对画布的内框）和放大后的位置：横向在原位正上方（不出画布），竖向在画布偏中间。
+  const slotX = r.left - c.left - canvas.clientLeft + box[0] * s + w / 2, slotY = r.top - c.top - canvas.clientTop + box[1] * s + h / 2;
+  const bigW = w * k, bigH = h * k;
+  const cx = Math.max(bigW / 2 + 12, Math.min(cw - bigW / 2 - 12, slotX)), cy = ch * FORMULA_POP_HEAT.centerY;
+  // 直接按放大后的尺寸排版（字清楚），用 transform 缩回原位再动画。
+  const element = document.createElement("div");
+  element.className = "formula-pop-heat";
+  element.setAttribute("aria-hidden", "true");
+  Object.assign(element.style, { left: `${cx - bigW / 2}px`, top: `${cy - bigH / 2}px`, width: `${bigW}px`, height: `${bigH}px` });
+  const inner = new Image();
+  inner.src = image.src; // 刚换的那一行（currentSrc 在新图载入前还是旧图）
+  Object.assign(inner.style, { left: `${-box[0] * s * k}px`, top: `${-box[1] * s * k}px`, width: `${size[0] * s * k}px`, height: `${size[1] * s * k}px` });
+  element.appendChild(inner);
+  const home = `translate(${slotX - cx}px, ${slotY - cy}px) scale(${1 / k})`;
+  element.style.transform = home;
+  canvas.appendChild(element);
+  const token = formulaPopHeat = { element, animation: null };
+  try { await Promise.race([inner.decode(), new Promise(resolve => setTimeout(resolve, 300))]); } catch { /* 解不出来也照常动画 */ }
+  if (formulaPopHeat !== token) return;
+  const { rise, hold, fall } = FORMULA_POP_HEAT, total = rise + hold + fall;
+  const shadow = "0 14px 36px rgba(20,45,76,.28)", flat = "0 0 0 rgba(20,45,76,0)";
+  token.animation = element.animate([
+    { transform: home, boxShadow: flat, offset: 0, easing: "cubic-bezier(.2,.8,.25,1)" },
+    { transform: "none", boxShadow: shadow, offset: rise / total },
+    { transform: "none", boxShadow: shadow, offset: (rise + hold) / total, easing: "cubic-bezier(.55,0,.75,.2)" },
+    { transform: home, boxShadow: flat, offset: 1 },
+  ], { duration: total, fill: "forwards" });
+  token.animation.onfinish = () => { if (formulaPopHeat === token) cancelFormulaPopHeat(); };
 }
 
 function deformationFormulaHtml(step, r = deformationBasicX1) {
@@ -1079,6 +1134,7 @@ function updateDeformationReveal(state) {
   const formulaCard = story.querySelector("[data-formula-card-heat]");
   if (formulaCard) {
     if (formulaCard.dataset.formulaStepHeat !== String(formulaStep)) {
+      cancelFormulaPopHeat();
       formulaCard.dataset.formulaStepHeat = String(formulaStep);
       formulaCard.innerHTML = formulaStep === 4 ? revealStepperHtmlHeat(FORMULA_ROWS_HEAT[4].length - 1, "逐项写出力法方程（1～3）", "formula") : "";
       bindRevealSteppersHeat(formulaCard);
@@ -1086,7 +1142,7 @@ function updateDeformationReveal(state) {
     }
     formulaCard.hidden = formulaStep !== 4;
   }
-  // heat：A2-4 右侧顶部六个圆球：第 1 个改写力法方程，第 2～6 个是 cc 示意图 1～5（每次进入都从「一个都没点」开始，原画面照常）
+  // heat：A2-4 右侧顶部七个圆球：第 1 个改写力法方程，第 2 个揭开蒙版，第 3～7 个是 cc 示意图 1～5（每次进入都从「一个都没点」开始，原画面照常）
   const onCcPage = Number(state.stage) === 3 && Number(state.deformation_reveal_step) === 4;
   const ccCard = story.querySelector("[data-cc-card-heat]");
   if (ccCard) {
@@ -1094,6 +1150,7 @@ function updateDeformationReveal(state) {
     if (ccStepper && (!onCcPage || ccCard.hidden)) setRevealStageHeat(ccStepper, 0);
     ccCard.hidden = !onCcPage;
   }
+  syncFocusMaskHeat();
   updateMethodStepsHeat(Number(state.stage) === 2 ? Number(state.force_reveal_step || 0) : -1);
 }
 
@@ -1142,7 +1199,7 @@ function renderDeformation() {
       ${ccSlidesHtmlHeat()}
       ${methodStepsHtmlHeat()}
       <div class="force-controls">
-        <aside class="control-card cc-card-heat" data-cc-card-heat hidden>${revealStepperHtmlHeat(6, "改写力法方程（1），逐张查看示意图（2～6）", "cc")}</aside>
+        <aside class="control-card cc-card-heat" data-cc-card-heat hidden>${revealStepperHtmlHeat(7, "改写力法方程（1），揭开蒙版（2），逐张查看示意图（3～7）", "cc")}</aside>
         <aside class="control-card formula-card-heat" data-formula-card-heat hidden></aside>
         <aside class="control-card force-control"><div class="range-row"><input data-force-slider data-force-channel="basic" type="range" min="0" max="2.5" step="0.005" value="0" aria-label="切开链杆后FyB滑块"/><strong data-force-value></strong></div><div data-force-readouts></div><p class="hint">上下滑块同步，两组内力图同步变化。</p></aside>
         <aside class="control-card ai-figure-card-heat" data-ai-figure-heat hidden><section class="ai-deformation-card"><div class="ai-deformation-heading"><span>AI</span><strong>辅助生成整梁变形</strong></div><button type="button" class="primary ai-deformation-button" data-ai-figure-button>启动 AI 辅助计算</button><small data-ai-figure-status>逐点计算 · 计算 26 个采样点位移</small></section></aside>
@@ -1160,11 +1217,57 @@ function renderDeformation() {
   originalStructure.insertAdjacentHTML("afterbegin", `<canvas class="deformation-load-canvas" data-deformation-load-top data-deformation-system="top" width="1000" height="${topCanvasHeight}" hidden></canvas>`);
   originalStructure.insertAdjacentHTML("beforeend", '<div class="deformation-zero-label" data-deformation-zero-label hidden>Δ<sub>B</sub> = 0</div>');
   document.querySelector(".force-free-canvas").insertAdjacentHTML("beforeend", '<div class="deformation-formula-label" data-deformation-formula hidden></div>');
+  document.querySelector(".force-free-canvas").insertAdjacentHTML("beforeend", '<div class="focus-mask-heat" data-focus-mask-heat hidden aria-hidden="true"></div>'); // heat 10-25：A2-3、A2-4 聚焦力法方程的蒙版
   document.querySelector(".force-free-canvas").insertAdjacentHTML("beforeend", compareViewHtmlHeat()); // heat
   bindDeformationStoryboard();
   bindAiFigureHeat();
   bindRevealSteppersHeat(app);
+  document.querySelector("[data-focus-mask-heat]")?.addEventListener("click", liftFocusMaskHeat);
+  document.querySelector(".deformation-story [data-force-slider]")?.addEventListener("input", liftFocusMaskHeat);
   updateDeformationReveal(currentState);
+}
+
+// heat（2026-10-25）：A2-3、A2-4 聚焦力法方程——画布上除公式以外蒙一层（默认白色、不透明度 50%），公式浮在蒙版上面。
+// 颜色、不透明度在版面调试的「A2-3／A2-4 聚焦公式的蒙版」里调（默认 A2 同组通用，两页一起变）。只在教师端（放大预览、控制台里的预览）蒙，学生手机不蒙。
+//   A2-3：进页起一直蒙着，三个圆球点完（公式写成 l³/(3EI)·FyB + 0 + (−4.5 mm)）也还蒙着；
+//         之后拖 F_yB 滑块、点一下蒙版，或翻页笔再按一下（开始「滑一遍 F_yB」）时揭开。圆球退回第 3 个之前，重新蒙上。
+//   A2-4：七个圆球，第 1 个改写方程时还蒙着，第 2 个专门用来揭开蒙版（画面留在原图），第 3 个起才是示意图；退回第 1 个，重新蒙上。
+const focusMaskHeat = { key: "", lifted: false };
+function focusMaskStageHeat(story, card) {
+  return Number(story?.querySelector(`[${card}] [data-reveal-stepper-heat]`)?.dataset.revealStageHeat || 0);
+}
+function syncFocusMaskHeat() {
+  const story = document.querySelector(".deformation-story");
+  const mask = story?.querySelector("[data-focus-mask-heat]");
+  if (!mask) return;
+  const page = Number(currentState?.stage) === 3 ? Number(currentState.deformation_reveal_step || 0) : -1;
+  const key = String(page);
+  if (focusMaskHeat.key !== key) Object.assign(focusMaskHeat, { key, lifted: false }); // 换了页：重新蒙上
+  const enabled = isPreview && (page === 3 || page === 4);
+  let on = false;
+  if (enabled && page === 3) {
+    if (focusMaskStageHeat(story, "data-formula-card-heat") < 3) focusMaskHeat.lifted = false;
+    on = !focusMaskHeat.lifted;
+  } else if (enabled && page === 4) {
+    on = focusMaskStageHeat(story, "data-cc-card-heat") < 2;
+  }
+  mask.hidden = !enabled;
+  mask.classList.toggle("on", on);
+  story.classList.toggle("focus-mask-on-heat", on);
+}
+// A2-3 三个圆球点完以后才揭得开（之前拖滑块、点蒙版都不揭）。
+function liftFocusMaskHeat() {
+  const story = document.querySelector(".deformation-story");
+  if (!story || focusMaskHeat.key !== "3" || focusMaskHeat.lifted) return;
+  if (focusMaskStageHeat(story, "data-formula-card-heat") < 3) return;
+  focusMaskHeat.lifted = true;
+  syncFocusMaskHeat();
+}
+// 翻页笔往回翻、撤销「滑一遍」时：回到揭开之前（蒙着）。
+function restoreFocusMaskHeat() {
+  if (focusMaskHeat.key !== "3") return;
+  focusMaskHeat.lifted = false;
+  syncFocusMaskHeat();
 }
 
 function calculationParametersHtmlHeat(variant) {
@@ -1269,6 +1372,7 @@ function revealStepperHtmlHeat(count, label, target = "") {
 function setRevealStageHeat(stepper, stage, figure = null) {
   const count = Number(stepper.dataset.revealStepperHeat) || 1;
   const value = Math.max(0, Math.min(count, Math.round(Number(stage) || 0)));
+  const previous = Number(stepper.dataset.revealStageHeat || 0);
   stepper.dataset.revealStageHeat = String(value);
   stepper.querySelectorAll("[data-reveal-dot-heat]").forEach(dot => {
     const n = Number(dot.dataset.revealDotHeat);
@@ -1281,12 +1385,21 @@ function setRevealStageHeat(stepper, stage, figure = null) {
   if (range && Number(range.value) !== Math.max(1, value)) range.value = String(Math.max(1, value));
   stepper.querySelector("[data-reveal-single-heat]")?.setAttribute("aria-pressed", String(value > 0));
   if (stepper.dataset.revealTargetHeat === "cc") {
-    // 第 1 个圆球只改写力法方程（第二行），第 2～6 个依次换成 cc 示意图 1～5，公式保持第二行
+    // 第 1 个圆球只改写力法方程（第二行），第 2 个只揭开蒙版，第 3～7 个依次换成 cc 示意图 1～5，公式保持第二行
     if (document.querySelector("[data-formula-card-heat]")?.dataset.formulaStepHeat === "5") applyFormulaStageHeat(value > 0 ? 1 : 0);
-    applyCcSlideHeat(stepper.closest(".force-story"), Math.max(0, value - 1));
+    applyCcSlideHeat(stepper.closest(".force-story"), Math.max(0, value - 2));
+    syncFocusMaskHeat();
+    // 一个一个往前点到第 1 个：最后一项换成 Δ1T，这一项放大升起再落回；往回点、一下跳过好几个（翻页笔往回翻落到这一页）都不动画。
+    if (previous === 0 && value === 1) popFormulaTermHeat(5, 3); else if (value < previous) cancelFormulaPopHeat();
     return;
   }
-  if (stepper.dataset.revealTargetHeat === "formula") { applyFormulaStageHeat(value); return; }
+  if (stepper.dataset.revealTargetHeat === "formula") {
+    applyFormulaStageHeat(value);
+    syncFocusMaskHeat();
+    // A2-3：第 k 个圆把第 k 项换掉，这一项放大升起再落回。只在一个一个往前点时动画。
+    if (value === previous + 1) popFormulaTermHeat(4, value); else if (value < previous) cancelFormulaPopHeat();
+    return;
+  }
   const target = figure || stepper.closest("[data-step-figure-heat]")
     || stepper.closest(".force-story")?.querySelector("[data-step-figure-heat]:not([hidden])");
   if (!target) return;
@@ -1303,7 +1416,7 @@ function setRevealStageHeat(stepper, stage, figure = null) {
     image.hidden = Number(image.dataset.revealSwapHeat) !== Math.min(value, 1);
   });
 }
-// A2-4：点第 k+1 个圆球（第 1 个改写力法方程），画布和滑块卡片收起，换成 cc-slide-k.SVG（原文件没有 viewBox，套一层 1280×720 的 svg 来缩放）。
+// A2-4：点第 k+2 个圆球（第 1 个改写力法方程，第 2 个揭开蒙版），画布和滑块卡片收起，换成 cc-slide-k.SVG（原文件没有 viewBox，套一层 1280×720 的 svg 来缩放）。
 const CC_SLIDES_HEAT = [1, 2, 3, 4, 5].map(number => `/assets/force-story/cc-slide-${number}.SVG`);
 function ccSlidesHtmlHeat() {
   return `<figure class="step-figure-heat cc-slides-heat" data-cc-slides-heat hidden>
@@ -2901,7 +3014,7 @@ async function start() {
 // ===== 翻页笔（2026-10-23）=====
 // 默认关闭，只用鼠标。打开：「放大学生预览」后，点底部中间那行「BEAM LAB」小字（变浅橙＝已打开；再点一下关闭；本机记住）。
 // 打开后只在放大预览里起作用：PageDown／→ 下一页，PageUp／← 上一页；F5 不刷新；其他键不处理。版面调试（?edit=1）里不起作用。
-// 下一页：本页还有没点的就先点下一个（温度版：A1-4 四个；A2-0、A2-1 各三个；A2-2 一个；A2-3 三个；A2-4 六个） → 下一步 → 下一阶段；
+// 下一页：本页还有没点的就先点下一个（温度版：A1-4 四个；A2-0、A2-1 各三个；A2-2 一个；A2-3 三个；A2-4 七个） → 下一步 → 下一阶段；
 // 上一页反过来，退到上一页时停在那一页的最后状态。AI 按钮、候选值按钮、滑块不归翻页笔管。
 // 外层（控制台）收到按键就转给预览框；预览框里的页面自己判断该点圆球还是换页（离线时直接写课堂状态，控制台随后跟上）。
 const CLICKER_STORE_KEY = "beam-clicker-mode-heat";
@@ -3011,8 +3124,8 @@ async function clickerRunExtra(kind) {
   }
   if (kind === "sweep") {
     const slider = clickerVisibleSlider("[data-force-slider]");
-    const from = await clickerSweep(slider);
-    return () => clickerSetSlider(slider, from);
+    const from = await clickerSweep(slider); // A2-3：滑块一动，聚焦公式的蒙版就揭开（见 liftFocusMaskHeat）
+    return () => { clickerSetSlider(slider, from); restoreFocusMaskHeat(); };
   }
   return null;
 }

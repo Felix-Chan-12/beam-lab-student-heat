@@ -131,6 +131,9 @@
     text: { label: "文字大小", unit: "%", min: 30, max: 300, step: 1, digits: 0 },
     // 文字颜色：存成 0xRRGGBB 整数（和其它数值一样存、一样撤销），窗口里用取色框。
     color: { label: "文字颜色", unit: "", min: 0, max: 16777215, step: 1, digits: 0 },
+    // A2-3／A2-4 聚焦公式的蒙版（2026-10-25）：颜色同样存成 0xRRGGBB 整数，用取色框；不透明度 0～100%。
+    maskColor: { label: "蒙版颜色", unit: "", min: 0, max: 16777215, step: 1, digits: 0, color: true },
+    maskOpacity: { label: "不透明度", unit: "%", min: 0, max: 100, step: 1, digits: 0 },
     arrowLength: { label: "箭头长度", unit: "图内px", min: 45, max: 600, step: 1, digits: 0 },
     arrowStroke: { label: "线条粗细", unit: "图内px", min: 1, max: 30, step: 1, digits: 0 },
     formulaX: { label: "图内 X 坐标", unit: "px", min: -1000, max: 6200, step: 1, digits: 1 },
@@ -182,6 +185,7 @@
     guard: ["gsize"],
     figureFormula: ["formulaX", "formulaY", "formulaScale"],
     figureArrow: ["formulaX", "formulaY", "formulaScale", "arrowLength", "arrowStroke", "color"],
+    focusMask: ["maskColor", "maskOpacity"],
   };
   // 画布里（绝对定位）的元素：坐标、宽高存成相对画布的 vw；其他元素的坐标存成相对原位置的移动量（dx、dy）。
   const CANVAS_KINDS = new Set(["abs", "abstext", "arrow", "bar"]);
@@ -195,6 +199,7 @@
     label: ["text"],
     figureFormula: ["formulaX", "formulaY", "formulaScale"],
     figureArrow: ["formulaX", "formulaY", "formulaScale", "arrowLength", "arrowStroke", "color"],
+    focusMask: ["maskColor", "maskOpacity"],
     box: ["frameInterval"],
   };
 
@@ -228,6 +233,7 @@
     abstext: "设成「同组 / 所有页通用」后，各页的这段文字在同一坐标。",
     label: "位置由程序跟着数值自动计算，这里调的是在自动位置上的偏移；拖右下角可以放大缩小。",
     arrow: "设成「同组 / 所有页通用」后，各页的箭头在同一坐标。",
+    focusMask: "A2-3、A2-4 盖在画布上、让大家只看力法方程的蒙版：改颜色和不透明度（0% 全透明，100% 完全盖住）。默认「同组通用」，A2-3 和 A2-4 一起变；要两页不一样，选「只改本页」。蒙版揭开以后就看不到了：A2-3 回到三个圆球点完之前、A2-4 回到第 1 个圆球再调。",
     bar: "设成「同组 / 所有页通用」后，各页的分隔线在同一坐标。",
     hero: "左栏占比决定左右两栏的宽度分配。",
     comp: "右栏宽度只在显示右侧控制栏的页面有效。",
@@ -333,9 +339,10 @@
     { key: "integrationArrowHeat", label: "图乘引导箭头（直线／拐弯共用）", sel: "#app [data-integration-arrow-heat]", kind: "figureArrow" },
     { key: "revealCardHeat", label: "A2-0／A2-1 三个圆球卡片", sel: "#app .reveal-card-heat", kind: "panel" },
     { key: "bendStepperHeat", label: "A2-2 圆球", sel: '#app [data-step-figure-heat="bendSources"] > [data-reveal-stepper-heat]', kind: "box" },
-    { key: "ccCardHeat", label: "A2-4 六个圆球卡片", sel: "#app .cc-card-heat", kind: "panel" },
+    { key: "ccCardHeat", label: "A2-4 七个圆球卡片", sel: "#app .cc-card-heat", kind: "panel" },
     { key: "formulaCardHeat", label: "A2-3 力法方程圆球卡片", sel: "#app .formula-card-heat", kind: "panel" },
     { key: "ccSlidesHeat", label: "A2-4 示意图（cc-slide）", sel: "#app [data-cc-slides-heat]", kind: "box" },
+    { key: "focusMaskHeat", label: "A2-3／A2-4 聚焦公式的蒙版", sel: "#app [data-focus-mask-heat]", kind: "focusMask" },
     { key: "tfStory", label: "M：整块面板", sel: "#app > .transfer-story", kind: "panel" },
     { key: "tfHead", label: "M：题目区", sel: "#app .transfer-head", kind: "group" },
     { key: "tfTitle", label: "M：题目", sel: "#app .transfer-head h1", kind: "text" },
@@ -366,7 +373,7 @@
   // 默认应用范围：各页都有的「外框、标题、右侧控制栏」默认所有页通用；「力法步骤」框（A1-1～A1-5，跨受力图、变形图两组）
   // 也默认所有页通用；E 阶段的两栏默认 E 两页通用；画布里的图和标注各页排布不同，默认只改本页。选中元素后可以随时改。
   const ALL_SCOPE_KEYS = new Set(["main", "story", "storyTitle", "composition", "controls", "controlCard", "aiCard", "rangeRow", "specials", "readouts", "readoutBoxes", "hint", "methodStepsHeat", "methodStepsTitleHeat"]);
-  const GROUP_SCOPE_KEYS = new Set(["arrowLabelLeftHeat", "arrowLabelRightHeat", "hero", "leftPanel", "leftTitle", "options", "optionAll", "submitRow", "voteInput", "voteSubmit", "fbSummary", "fbTotal", "fbBars", "fbComments", "rightPanel", "rightTitle", "rightSubtitle", "rightLead", "equations", "candidates", "candidateRows", "symbolNotes"]);
+  const GROUP_SCOPE_KEYS = new Set(["focusMaskHeat", "arrowLabelLeftHeat", "arrowLabelRightHeat", "hero", "leftPanel", "leftTitle", "options", "optionAll", "submitRow", "voteInput", "voteSubmit", "fbSummary", "fbTotal", "fbBars", "fbComments", "rightPanel", "rightTitle", "rightSubtitle", "rightLead", "equations", "candidates", "candidateRows", "symbolNotes"]);
   PAGE_REGISTRY.forEach((def) => { def.scope = ALL_SCOPE_KEYS.has(def.key) ? "all" : GROUP_SCOPE_KEYS.has(def.key) ? "group" : "page"; });
 
   // 学生页（手机）独有的顶部栏与导航。
@@ -722,6 +729,8 @@
     if (p.minH != null) d.push(`min-height: ${p.minH}px${I}`);
     if (p.gsize != null) d.push(`--fr-guard-b: ${p.gsize}px${I}`);
     if (p.color != null) d.push(`color: #${Math.max(0, Math.min(16777215, Math.round(p.color))).toString(16).padStart(6, "0")}${I}`);
+    if (p.maskColor != null) d.push(`--heat-mask-color: #${Math.max(0, Math.min(16777215, Math.round(p.maskColor))).toString(16).padStart(6, "0")}${I}`);
+    if (p.maskOpacity != null) d.push(`--heat-mask-opacity: ${round(Math.max(0, Math.min(100, p.maskOpacity)) / 100, 3)}${I}`);
     if (p.formulaX != null) d.push(`--heat-formula-x: ${p.formulaX}px${I}`);
     if (p.formulaY != null) d.push(`--heat-formula-y: ${p.formulaY}px${I}`);
     if (p.formulaScale != null) d.push(`--heat-formula-scale: ${round(p.formulaScale / 100, 4)}${I}`);
@@ -1808,6 +1817,14 @@
         case "arrowStroke": return parseFloat(cs.getPropertyValue("--heat-arrow-stroke")) || 8;
         case "frameInterval": return parseFloat(cs.getPropertyValue("--heat-frame-interval")) || 0.2;
         case "color": { const m = String(cs.color).match(/\d+(\.\d+)?/g) || [0, 0, 0]; return (Math.round(m[0]) << 16) + (Math.round(m[1]) << 8) + Math.round(m[2]); }
+        case "maskColor": {
+          const v = cs.getPropertyValue("--heat-mask-color").trim();
+          const hex = v.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+          if (hex) { const h = hex[1].length === 3 ? hex[1].replace(/./g, "$&$&") : hex[1]; return parseInt(h, 16); }
+          const m = v.match(/\d+(\.\d+)?/g);
+          return m && m.length >= 3 ? (Math.round(m[0]) << 16) + (Math.round(m[1]) << 8) + Math.round(m[2]) : 0xffffff;
+        }
+        case "maskOpacity": { const v = parseFloat(cs.getPropertyValue("--heat-mask-opacity")); return Number.isFinite(v) ? v * 100 : 50; }
         case "left": return px(cs.left) / (containerOf(node).clientWidth || 1) * 100;
         case "top": return px(cs.top) / (containerOf(node).clientHeight || 1) * 100;
         case "width": return px(cs.width) / widthBasis(def, node) * 100;
@@ -2175,14 +2192,14 @@
         if (prop === "color") meta.label = "箭头颜色";
         if (prop === "formulaScale") meta.label = "箭头大小";
       }
-      if (prop === "color") {
-        return `<div class="prop" data-prop="color">
+      if (prop === "color" || meta.color) {
+        return `<div class="prop" data-prop="${prop}">
         <span class="name">${meta.label}</span>
         <input type="color" class="color-pick">
         <input type="range" min="${meta.min}" max="${meta.max}" step="1" hidden>
         <input type="number" step="1" hidden>
         <span class="unit"></span>
-        <button class="reset" data-reset="color" title="恢复默认" disabled>↺</button>
+        <button class="reset" data-reset="${prop}" title="恢复默认" disabled>↺</button>
       </div>`;
       }
       return `<div class="prop" data-prop="${prop}">
@@ -2843,7 +2860,7 @@
       }
       const row = event.target.closest(".prop");
       if (!row || !selected) return;
-      if (event.target.type === "color") { setProp(selected.def, "color", parseInt(event.target.value.slice(1), 16)); return; }
+      if (event.target.type === "color") { setProp(selected.def, row.dataset.prop, parseInt(event.target.value.slice(1), 16)); return; }
       const value = Number(event.target.value);
       if (event.target.value === "" || !Number.isFinite(value)) return;
       setProp(selected.def, row.dataset.prop, value);

@@ -991,3 +991,12 @@ body:not(.layout-mode) .method-equation-title-heat { font-size: calc(var(--text-
 body.beam-frame #teacherCockpit.preview-focus > .teacher-command-bar > .clicker-toggle { display: block; position: absolute; z-index: 2; left: 50%; bottom: 0; transform: translateX(-50%);
   width: 140px; min-width: 0; height: calc(var(--fr-brand) * 1.6 + 8px); min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; outline: none; cursor: pointer; }
 body.beam-frame #teacherCockpit.preview-focus.clicker-on > .teacher-command-bar::before { color: #e8955f; }
+
+/* heat（2026-10-25）：A2-3、A2-4 聚焦力法方程的蒙版（见 app.js 的 syncFocusMaskHeat）。盖住整块画布，公式浮在上面。
+   颜色、不透明度写成变量，版面调试「A2-3／A2-4 聚焦公式的蒙版」里改的就是这两个；揭开、盖上时淡入淡出。 */
+.focus-mask-heat { --heat-mask-color: #ffffff; --heat-mask-opacity: .5; position: absolute; inset: 0; z-index: 9; border-radius: inherit; background: var(--heat-mask-color); opacity: 0; pointer-events: none; transition: opacity .35s ease; }
+.focus-mask-heat.on { opacity: var(--heat-mask-opacity); pointer-events: auto; }
+.deformation-story.focus-mask-on-heat .deformation-formula-label { z-index: 10; }
+/* heat（2026-10-25）：A2-3、A2-4 力法方程里换了值的那一项，放大升到画布中间再落回（见 app.js 的 popFormulaTermHeat）。 */
+.formula-pop-heat { position: absolute; z-index: 11; overflow: hidden; pointer-events: none; transform-origin: 50% 50%; will-change: transform; }
+.formula-pop-heat > img { position: absolute; max-width: none; display: block; }
