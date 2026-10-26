@@ -1015,7 +1015,7 @@
        inkscape:isstock="true"
        inkscape:collect="always"
        preserveAspectRatio="xMidYMid"><path
-         style="fill:none;stroke:context-stroke;stroke-width:1;stroke-linecap:butt"
+         style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:butt"
          d="M 3,-3 0,0 3,3"
          transform="rotate(180,0.125,0)"
          sodipodi:nodetypes="ccc"
